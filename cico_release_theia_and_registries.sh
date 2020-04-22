@@ -30,7 +30,7 @@ releaseCheContainer()
 
     # get the script & run it
     rm -f ./make-release.sh && curl -sSLO "${makeReleaseURL}" && chmod +x ./make-release.sh
-    # ./make-release.sh --repo git@github.com:${projectPath} --version ${containerVersion} --trigger-release
+    ./make-release.sh --repo git@github.com:${projectPath} --version ${containerVersion} --trigger-release
     echo "[INFO] Running ${jobURL} ..." 
 
     # wait until the job has completed and the container is live

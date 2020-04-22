@@ -27,7 +27,7 @@ load_mvn_settings_gpg_key() {
 install_deps(){
     set +x
     yum -y update
-    yum -y install centos-release-scl-rh java-1.8.0-openjdk-devel git 
+    yum -y install centos-release-scl-rh java-1.8.0-openjdk-devel git skopeo jq
     yum -y install rh-maven33
     yum install -y yum-utils device-mapper-persistent-data lvm2
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
@@ -247,9 +247,11 @@ install_deps
 setup_gitconfig
 
 evaluate_che_variables
-# insert che-theia/che-machine-exec/che-plugin-registry/che-devfile-registry release flow here
-# release of che should start only when all necessary release images are available on Quay
 
+# release che-theia, machine-exec, plugin-registry and devfile-registry
+./cico_release_theia_and_registries.sh
+
+# release of che should start only when all necessary release images are available on Quay
 checkout_projects
 apply_transformations
 create_tags

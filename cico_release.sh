@@ -51,14 +51,13 @@ evaluate_che_variables() {
     else
         BASEBRANCH="${BRANCH}"
     fi
-    echo "Basebranch: ${BASEBRANCH}"
-
-        
+    echo "Basebranch: ${BASEBRANCH}" 
 }
 
 build_and_deploy_artifacts() {
     set -x
-    scl enable rh-maven33 'mvn clean install -U'
+    cd che-parent
+    scl enable rh-maven33 'mvn clean install -U -Pcodenvy-release -DskipTests=true -Dskip-validate-sources'
     if [ $? -eq 0 ]; then
         echo 'Build Success!'
         echo 'Going to deploy artifacts'
@@ -95,32 +94,49 @@ checkout_project() {
         git fetch origin "${BRANCH}:${BRANCH}"
         git checkout "${BRANCH}"
     fi
-    set -x
     cd ..
 
 }
 
 # ensure proper version is used
 apply_transformations() {
-    scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION} -DprocessAllModules"
-    #mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION} -DprocessAllModules #for local use
+    #TODO here che-parent is used to aggregate all the modules under "codenvy-release" profile
+    # this sed should be unhardcoded (or commited to che-parent) ASAP!
+    sed -i '1677i \ \ \ \ \ \ \ \ \ \ \ \ </modules>' che-parent/pom.xml
+    sed -i '1677i \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <module>../che</module>' che-parent/pom.xml
+    sed -i '1677i \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <module>../che-workspace-loader</module>' che-parent/pom.xml
+    sed -i '1677i \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <module>../che-dashboard</module>' che-parent/pom.xml
+    sed -i '1677i \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <module>../che-docs</module>' che-parent/pom.xml
+    sed -i '1677i \ \ \ \ \ \ \ \ \ \ \ \ <modules>' che-parent/pom.xml
+
+    echo "[INFO] parent pom has been expanded with modules for release profile"
+
+    sed -i "/<\/parent>/i \ \ \ \ \ \ \ \ <relativePath>../che-parent/dependencies</relativePath>" che-dashboard/pom.xml che-docs/pom.xml che-workspace-loader/pom.xml che/pom.xml
+    echo "[INFO] relative path to parent pom has been set"
+
+    cd che-parent
+    scl enable rh-maven33 "mvn versions:set -Pcodenvy-release -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}"
+    #mvn versions:set -DgenerateBackupPoms=false -Pcodenvy-release -DnewVersion=${CHE_VERSION} #for local use
+    cd ..
+
+    echo "[INFO] version has been updated"
 
     #TODO more elegant way to execute these scripts
     cd che/.ci
-    ./set_tag_version_images_linux ${CHE_VERSION}
-    echo "tag versions of images have been set in che-server"
+    ./set_tag_version_images_linux.sh ${CHE_VERSION}
+    echo "[INFO] tag versions of images have been set in che-server"
 
     # Replace dependencies in che-server parent
     cd ..
     sed -i -e "s#${VERSION}-SNAPSHOT#${NEXTVERSION}#" pom.xml
     cd ..
-    echo "dependencies updated in che-server parent"
+    echo "[INFO] dependencies updated in che-server parent"
 }
 
 # TODO change it to someone else?
 setup_gitconfig() {
-  git config --global user.name "Vitalii Parfonov"
-  git config --global user.email vparfono@redhat.com
+  git config --global user.name "Mykhailo Kuznietsov"
+  git config --global user.email mkuznets@redhat.com
 }
 
 create_tags() {
@@ -138,24 +154,24 @@ tag_and_commit() {
         echo "tag ${CHE_VERSION} already exists! recreating ..."
         git tag "${CHE_VERSION}"
     else
-        echo "creating new tag ${CHE_VERSION}"
+        echo "[INFO] creating new tag ${CHE_VERSION}"
         git push origin :${CHE_VERSION}
         git tag "${CHE_VERSION}"
     fi
     git push --tags
-    echo "tag created and pushed for $1"
+    echo "[INFO] tag created and pushed for $1"
     cd ..
 }
 
  # KEEP RIGHT ORDER!!!
 DOCKER_FILES_LOCATIONS=(
-    dockerfiles/endpoint-watcher
-    dockerfiles/keycloak
-    dockerfiles/postgres
-    dockerfiles/dev
-    dockerfiles/che
-    dockerfiles/dashboard-dev
-    dockerfiles/e2e
+    che/dockerfiles/endpoint-watcher
+    che/dockerfiles/keycloak
+    che/dockerfiles/postgres
+    che/dockerfiles/dev
+    che/dockerfiles/che
+    che/dockerfiles/dashboard-dev
+    che/dockerfiles/e2e
 )
 
 IMAGES_LIST=(
@@ -186,7 +202,7 @@ buildImages() {
     for image_dir in ${DOCKER_FILES_LOCATIONS[@]}
      do
          bash $(pwd)/${image_dir}/build.sh --tag:${TAG} 
-         if [[ ${image_dir} == "dockerfiles/che" ]]; then
+         if [[ ${image_dir} == "che/dockerfiles/che" ]]; then
            #CENTOS SINGLE USER
            BUILD_ASSEMBLY_DIR=$(echo assembly/assembly-main/target/eclipse-che-*/eclipse-che-*/)
            LOCAL_ASSEMBLY_DIR="${image_dir}/eclipse-che"
@@ -243,22 +259,22 @@ pushImagesOnQuay() {
         done
 }
 
-load_jenkins_vars
-load_mvn_settings_gpg_key
-install_deps
-setup_gitconfig
+#load_jenkins_vars
+#load_mvn_settings_gpg_key
+#install_deps
+#setup_gitconfig
 
 evaluate_che_variables
 
 # release che-theia, machine-exec, plugin-registry and devfile-registry
-./cico_release_theia_and_registries.sh
+#./cico_release_theia_and_registries.sh
 
 # release of che should start only when all necessary release images are available on Quay
-#checkout_projects
-#apply_transformations
-#create_tags
+checkout_projects
+apply_transformations
+create_tags
 
-#build_and_deploy_artifacts
-#buildImages  ${CHE_VERSION}
-#tagLatestImages ${CHE_VERSION}
-#pushImagesOnQuay ${CHE_VERSION} pushLatest
+build_and_deploy_artifacts
+buildImages  ${CHE_VERSION}
+tagLatestImages ${CHE_VERSION}
+pushImagesOnQuay ${CHE_VERSION} pushLatest

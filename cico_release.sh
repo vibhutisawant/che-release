@@ -2,10 +2,12 @@ load_jenkins_vars() {
     set +x
     eval "$(./env-toolkit load -f jenkins-env.json \
                               CHE_BOT_GITHUB_TOKEN \
-                              CHE_GITHUB_SSH_KEY \
                               CHE_MAVEN_SETTINGS \
+                              CHE_GITHUB_SSH_KEY \
                               CHE_OSS_SONATYPE_GPG_KEY \
-                              CHE_OSS_SONATYPE_PASSPHRASE)"
+                              CHE_OSS_SONATYPE_PASSPHRASE \
+                              QUAY_ECLIPSE_CHE_USERNAME \
+                              QUAY_ECLIPSE_CHE_PASSWORD)"
 }
 
 load_mvn_settings_gpg_key() {
@@ -252,9 +254,9 @@ evaluate_che_variables
 ./cico_release_theia_and_registries.sh
 
 # release of che should start only when all necessary release images are available on Quay
-checkout_projects
-apply_transformations
-create_tags
+#checkout_projects
+#apply_transformations
+#create_tags
 
 #build_and_deploy_artifacts
 #buildImages  ${CHE_VERSION}

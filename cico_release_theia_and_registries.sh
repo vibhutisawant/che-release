@@ -75,7 +75,8 @@ verifyContainerExists ()
 # get CHE_VERSION from VERSION file if not set via commandline (handy for running this script locally to re-release or re-check an older version)
 if [[ $1 ]]; then CHE_VERSION="$1"; else source VERSION; fi 
 
+releaseCheContainer eclipse/che-devfile-registry devtools-che-devfile-registry-release 75
 releaseCheContainer eclipse/che-theia            devtools-che-theia-che-release       165
 releaseCheContainer eclipse/che-machine-exec     devtools-che-machine-exec-release     60
 releaseCheContainer eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45
-releaseCheContainer eclipse/che-devfile-registry devtools-che-devfile-registry-release 75
+

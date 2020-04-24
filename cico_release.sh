@@ -57,12 +57,12 @@ evaluate_che_variables() {
 build_and_deploy_artifacts() {
     set -x
     cd che-parent
-    scl enable rh-maven33 'mvn clean install -U -Pcodenvy-release -DskipTests=true -Dskip-validate-sources'
+    scl enable rh-maven33 "mvn clean install -U -Pcodenvy-release -DskipTests=true -Dskip-validate-sources  -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
     if [ $? -eq 0 ]; then
         echo 'Build Success!'
         echo 'Going to deploy artifacts'
         scl enable rh-maven33 "mvn clean deploy -Pcodenvy-release -DcreateChecksum=true  -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
-
+        cd ..
     else
         echo 'Build Failed!'
         exit 1
@@ -204,7 +204,7 @@ buildImages() {
          bash $(pwd)/${image_dir}/build.sh --tag:${TAG} 
          if [[ ${image_dir} == "che/dockerfiles/che" ]]; then
            #CENTOS SINGLE USER
-           BUILD_ASSEMBLY_DIR=$(echo assembly/assembly-main/target/eclipse-che-*/eclipse-che-*/)
+           BUILD_ASSEMBLY_DIR=$(echo che/assembly/assembly-main/target/eclipse-che-*/eclipse-che-*/)
            LOCAL_ASSEMBLY_DIR="${image_dir}/eclipse-che"
            if [[ -d "${LOCAL_ASSEMBLY_DIR}" ]]; then
                rm -r "${LOCAL_ASSEMBLY_DIR}"
@@ -267,7 +267,7 @@ setup_gitconfig
 evaluate_che_variables
 
 # release che-theia, machine-exec, plugin-registry and devfile-registry
-#./cico_release_theia_and_registries.sh
+./cico_release_theia_and_registries.sh
 
 # release of che should start only when all necessary release images are available on Quay
 checkout_projects

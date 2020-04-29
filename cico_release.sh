@@ -29,13 +29,14 @@ load_mvn_settings_gpg_key() {
 install_deps(){
     set +x
     yum -y update
-    yum -y install centos-release-scl-rh java-1.8.0-openjdk-devel git skopeo jq
+    yum -y install centos-release-scl-rh java-1.8.0-openjdk-devel git skopeo
     yum -y install rh-maven33
     yum install -y yum-utils device-mapper-persistent-data lvm2
+    yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
     curl -sL https://rpm.nodesource.com/setup_10.x | bash -
     yum-config-manager --add-repo https://dl.yarnpkg.com/rpm/yarn.repo
-    yum install -y docker-ce nodejs yarn gcc-c++ make
+    yum install -y docker-ce nodejs yarn gcc-c++ make jq hub
     service docker start
 }
 
@@ -128,7 +129,7 @@ apply_transformations() {
 
     # Replace dependencies in che-server parent
     cd ..
-    sed -i -e "s#${VERSION}-SNAPSHOT#${NEXTVERSION}#" pom.xml
+    sed -i -e "s#${VERSION}-SNAPSHOT#${VERSION}#" pom.xml
     cd ..
     echo "[INFO] dependencies updated in che-server parent"
 }
@@ -149,13 +150,16 @@ create_tags() {
 
 tag_and_commit() {
     cd $1
+    # this branch isn't meant to be pushed
+    git checkout -b release-${CHE_VERSION}
     git commit -asm "Release version ${CHE_VERSION}"
     if [ $(git tag -l "$CHE_VERSION") ]; then
         echo "tag ${CHE_VERSION} already exists! recreating ..."
+        git tag -d ${CHE_VERSION}
+        git push origin :${CHE_VERSION}
         git tag "${CHE_VERSION}"
     else
         echo "[INFO] creating new tag ${CHE_VERSION}"
-        git push origin :${CHE_VERSION}
         git tag "${CHE_VERSION}"
     fi
     git push --tags
@@ -259,6 +263,54 @@ pushImagesOnQuay() {
         done
 }
 
+commit_change_or_create_PR(){
+    aVERSION="$1"
+    aBRANCH="$2"
+    PR_BRANCH="$3"
+
+    if [[ ${PR_BRANCH} == *"add"* ]]; then
+        COMMIT_MSG="[release] Add ${aVERSION} plugins in ${aBRANCH}"
+    else 
+        COMMIT_MSG="[release] Bump to ${aVERSION} in ${aBRANCH}"
+    fi
+
+    # commit change into branch
+    git add v3/plugins/eclipse/ || true
+    git commit -s -m "${COMMIT_MSG}" VERSION v3/plugins/eclipse/
+    git pull origin "${aBRANCH}"
+
+    PUSH_TRY="$(git push origin "${aBRANCH}")"
+    # shellcheck disable=SC2181
+    if [[ $? -gt 0 ]] || [[ $PUSH_TRY == *"protected branch hook declined"* ]]; then
+        # create pull request for master branch, as branch is restricted
+        git branch "${PR_BRANCH}"
+        git checkout "${PR_BRANCH}"
+        git pull origin "${PR_BRANCH}"
+        git push origin "${PR_BRANCH}"
+        lastCommitComment="$(git log -1 --pretty=%B)"
+        hub pull-request -o -f -m "${lastCommitComment}
+
+        ${lastCommitComment}" -b "${aBRANCH}" -h "${PR_BRANCH}"
+    fi
+}
+
+update_project_version() {
+}
+
+bump_versions() {
+    # infer project version + commit change into ${BASEBRANCH} branch
+    if [[ "${BASEBRANCH}" != "${BRANCH}" ]]; then
+    # bump the y digit
+    [[ $BRANCH =~ ^([0-9]+)\.([0-9]+)\.x ]] && BASE=${BASH_REMATCH[1]}; NEXT=${BASH_REMATCH[2]}; (( NEXT=NEXT+1 )) # for BRANCH=7.10.x, get BASE=7, NEXT=11
+    NEXTVERSION_Y="${BASE}.${NEXT}.0-SNAPSHOT"
+    bump_version ${NEXTVERSION_Y} ${BASEBRANCH}
+    fi
+    # bump the z digit
+    [[ $VERSION =~ ^([0-9]+)\.([0-9]+)\.([0-9]+) ]] && BASE="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"; NEXT="${BASH_REMATCH[3]}"; (( NEXT=NEXT+1 )) # for VERSION=7.7.1, get BASE=7.7, NEXT=2
+    NEXTVERSION_Z="${BASE}.${NEXT}-SNAPSHOT"
+    bump_version ${NEXTVERSION_Z} ${BRANCH}
+}
+
 load_jenkins_vars
 load_mvn_settings_gpg_key
 install_deps
@@ -270,11 +322,13 @@ evaluate_che_variables
 ./cico_release_theia_and_registries.sh
 
 # release of che should start only when all necessary release images are available on Quay
-checkout_projects
-apply_transformations
-create_tags
+#checkout_projects
+#apply_transformations
+#create_tags
 
-build_and_deploy_artifacts
-buildImages  ${CHE_VERSION}
-tagLatestImages ${CHE_VERSION}
-pushImagesOnQuay ${CHE_VERSION} pushLatest
+#build_and_deploy_artifacts
+#buildImages  ${CHE_VERSION}
+#tagLatestImages ${CHE_VERSION}
+#pushImagesOnQuay ${CHE_VERSION} pushLatest
+
+#bump_versions

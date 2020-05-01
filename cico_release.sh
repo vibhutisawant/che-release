@@ -318,8 +318,14 @@ setup_gitconfig
 
 evaluate_che_variables
 
-# release che-theia, machine-exec, plugin-registry and devfile-registry
-./cico_release_theia_and_registries.sh
+# release che-theia, machine-exec and devfile-registry
+./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 &
+./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 &
+./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 &
+wait
+# then release plugin-registry (depends on che-theia and machine-exec)
+./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 &
+wait
 
 # release of che should start only when all necessary release images are available on Quay
 #checkout_projects

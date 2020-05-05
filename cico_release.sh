@@ -95,6 +95,7 @@ checkout_project() {
         git fetch origin "${BRANCH}:${BRANCH}"
         git checkout "${BRANCH}"
     fi
+    set +x
     cd ..
 
 }
@@ -129,7 +130,9 @@ apply_transformations() {
 
     # Replace dependencies in che-server parent
     cd ..
-    sed -i -e "s#${VERSION}-SNAPSHOT#${VERSION}#" pom.xml
+    sed -i -e "s#<che.dashboard.version>.*<\/che.dashboard.version>#<che.dashboard.version>${CHE_VERSION}<\/che.dashboard.version>#" pom.xml
+    sed -i -e "s#<che.docs.version>.*<\/che.docs.version>#<che.docs.version>${CHE_VERSION}<\/che.docs.version>#" pom.xml
+    sed -i -e "s#<che.version>.*<\/che.version>#<che.version>${CHE_VERSION}<\/che.version>#" pom.xml
     cd ..
     echo "[INFO] dependencies updated in che-server parent"
 }
@@ -263,20 +266,15 @@ pushImagesOnQuay() {
         done
 }
 
-commit_change_or_create_PR(){
+commit_change_or_create_PR() {
     aVERSION="$1"
     aBRANCH="$2"
     PR_BRANCH="$3"
 
-    if [[ ${PR_BRANCH} == *"add"* ]]; then
-        COMMIT_MSG="[release] Add ${aVERSION} plugins in ${aBRANCH}"
-    else 
-        COMMIT_MSG="[release] Bump to ${aVERSION} in ${aBRANCH}"
-    fi
+    COMMIT_MSG="[release] Bump to ${aVERSION} in ${aBRANCH}"
 
     # commit change into branch
-    git add v3/plugins/eclipse/ || true
-    git commit -s -m "${COMMIT_MSG}" VERSION v3/plugins/eclipse/
+    git commit -asm "${COMMIT_MSG}"
     git pull origin "${aBRANCH}"
 
     PUSH_TRY="$(git push origin "${aBRANCH}")"
@@ -287,26 +285,65 @@ commit_change_or_create_PR(){
         git checkout "${PR_BRANCH}"
         git pull origin "${PR_BRANCH}"
         git push origin "${PR_BRANCH}"
-        lastCommitComment="$(git log -1 --pretty=%B)"
-        hub pull-request -o -f -m "${lastCommitComment}
-
-        ${lastCommitComment}" -b "${aBRANCH}" -h "${PR_BRANCH}"
+        #lastCommitComment="$(git log -1 --pretty=%B)"
+        #hub pull-request -o -f -m "${lastCommitComment} ${lastCommitComment}" -b "${aBRANCH}" -h "${PR_BRANCH}"
     fi
 }
 
-update_project_version() {
+bump_version() {
+    cd che-parent
+    git checkout $2
+
+    echo "bumping to version $1 in branch $2"
+
+    scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$1"
+    scl enable rh-maven33 "mvn clean install"
+    commit_change_or_create_PR $1 $2 "pr-${2}-to-${1}"
+    cd ..
+
+    cd che-docs
+    git checkout $2
+    scl enable rh-maven33 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[$1]"
+    scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
+    commit_change_or_create_PR $1 $2 "pr-${2}-to-${1}"
+    cd ..
+
+    cd che-dashboard
+    git checkout $2
+    scl enable rh-maven33 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[$1]"
+    scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
+    commit_change_or_create_PR $1 $2 "pr-${2}-to-${1}"
+    cd ..
+
+    cd che-workspace-loader
+    git checkout $2
+    scl enable rh-maven33 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[$1]"
+    scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
+    commit_change_or_create_PR $1 $2 "pr-${2}-to-${1}"
+    cd ..
+    
+    cd che
+    git checkout $2
+    scl enable rh-maven33 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[$1]"
+    scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
+    sed -i -e "s#<che.dashboard.version>.*<\/che.dashboard.version>#<che.dashboard.version>$1<\/che.dashboard.version>#" pom.xml
+    sed -i -e "s#<che.docs.version>.*<\/che.docs.version>#<che.docs.version>$1<\/che.docs.version>#" pom.xml
+    sed -i -e "s#<che.version>.*<\/che.version>#<che.version>$1<\/che.version>#" pom.xml
+    commit_change_or_create_PR $1 $2 "pr-${2}-to-${1}"
+    cd ..    
 }
 
 bump_versions() {
     # infer project version + commit change into ${BASEBRANCH} branch
+    echo "${BASEBRANCH} ${BRANCH}"
     if [[ "${BASEBRANCH}" != "${BRANCH}" ]]; then
-    # bump the y digit
-    [[ $BRANCH =~ ^([0-9]+)\.([0-9]+)\.x ]] && BASE=${BASH_REMATCH[1]}; NEXT=${BASH_REMATCH[2]}; (( NEXT=NEXT+1 )) # for BRANCH=7.10.x, get BASE=7, NEXT=11
-    NEXTVERSION_Y="${BASE}.${NEXT}.0-SNAPSHOT"
-    bump_version ${NEXTVERSION_Y} ${BASEBRANCH}
+        # bump the y digit
+        [[ ${BRANCH} =~ ^([0-9]+)\.([0-9]+)\.x ]] && BASE=${BASH_REMATCH[1]}; NEXT=${BASH_REMATCH[2]}; (( NEXT=NEXT+1 )) # for BRANCH=7.10.x, get BASE=7, NEXT=11
+        NEXTVERSION_Y="${BASE}.${NEXT}.0-SNAPSHOT"
+        bump_version ${NEXTVERSION_Y} ${BASEBRANCH}
     fi
     # bump the z digit
-    [[ $VERSION =~ ^([0-9]+)\.([0-9]+)\.([0-9]+) ]] && BASE="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"; NEXT="${BASH_REMATCH[3]}"; (( NEXT=NEXT+1 )) # for VERSION=7.7.1, get BASE=7.7, NEXT=2
+    [[ ${CHE_VERSION} =~ ^([0-9]+)\.([0-9]+)\.([0-9]+) ]] && BASE="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"; NEXT="${BASH_REMATCH[3]}"; (( NEXT=NEXT+1 )) # for VERSION=7.7.1, get BASE=7.7, NEXT=2
     NEXTVERSION_Z="${BASE}.${NEXT}-SNAPSHOT"
     bump_version ${NEXTVERSION_Z} ${BRANCH}
 }
@@ -328,13 +365,13 @@ wait
 wait
 
 # release of che should start only when all necessary release images are available on Quay
-#checkout_projects
-#apply_transformations
-#create_tags
+checkout_projects
+apply_transformations
+create_tags
 
-#build_and_deploy_artifacts
-#buildImages  ${CHE_VERSION}
-#tagLatestImages ${CHE_VERSION}
-#pushImagesOnQuay ${CHE_VERSION} pushLatest
+build_and_deploy_artifacts
+buildImages  ${CHE_VERSION}
+tagLatestImages ${CHE_VERSION}
+pushImagesOnQuay ${CHE_VERSION} pushLatest
 
-#bump_versions
+bump_versions

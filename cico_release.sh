@@ -62,7 +62,7 @@ build_and_deploy_artifacts() {
     if [ $? -eq 0 ]; then
         echo 'Build Success!'
         echo 'Going to deploy artifacts'
-        scl enable rh-maven33 "mvn clean deploy -Pcodenvy-release -DcreateChecksum=true  -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
+        scl enable rh-maven33 "mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DskipTests=true -Dskip-validate-sources -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
         cd ..
     else
         echo 'Build Failed!'
@@ -74,7 +74,6 @@ build_and_deploy_artifacts() {
 checkout_projects() {
     pwd
     checkout_project git@github.com:eclipse/che-parent
-    checkout_project git@github.com:eclipse/che-docs
     checkout_project git@github.com:eclipse/che
     checkout_project git@github.com:eclipse/che-dashboard
     checkout_project git@github.com:eclipse/che-workspace-loader
@@ -108,12 +107,11 @@ apply_transformations() {
     sed -i '1677i \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <module>../che</module>' che-parent/pom.xml
     sed -i '1677i \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <module>../che-workspace-loader</module>' che-parent/pom.xml
     sed -i '1677i \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <module>../che-dashboard</module>' che-parent/pom.xml
-    sed -i '1677i \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ <module>../che-docs</module>' che-parent/pom.xml
     sed -i '1677i \ \ \ \ \ \ \ \ \ \ \ \ <modules>' che-parent/pom.xml
 
     echo "[INFO] parent pom has been expanded with modules for release profile"
 
-    sed -i "/<\/parent>/i \ \ \ \ \ \ \ \ <relativePath>../che-parent/dependencies</relativePath>" che-dashboard/pom.xml che-docs/pom.xml che-workspace-loader/pom.xml che/pom.xml
+    sed -i "/<\/parent>/i \ \ \ \ \ \ \ \ <relativePath>../che-parent/dependencies</relativePath>" che-dashboard/pom.xml che-workspace-loader/pom.xml che/pom.xml
     echo "[INFO] relative path to parent pom has been set"
 
     cd che-parent
@@ -131,7 +129,6 @@ apply_transformations() {
     # Replace dependencies in che-server parent
     cd ..
     sed -i -e "s#<che.dashboard.version>.*<\/che.dashboard.version>#<che.dashboard.version>${CHE_VERSION}<\/che.dashboard.version>#" pom.xml
-    sed -i -e "s#<che.docs.version>.*<\/che.docs.version>#<che.docs.version>${CHE_VERSION}<\/che.docs.version>#" pom.xml
     sed -i -e "s#<che.version>.*<\/che.version>#<che.version>${CHE_VERSION}<\/che.version>#" pom.xml
     cd ..
     echo "[INFO] dependencies updated in che-server parent"
@@ -145,7 +142,6 @@ setup_gitconfig() {
 
 create_tags() {
     tag_and_commit che-parent
-    tag_and_commit che-docs
     tag_and_commit che-dashboard
     tag_and_commit che-workspace-loader
     tag_and_commit che
@@ -291,20 +287,19 @@ commit_change_or_create_PR() {
 }
 
 bump_version() {
+    set -x
+
     cd che-parent
     git checkout $2
+
+    # install previous version, in case it is not available in central repo
+    # which is needed for dependent projects
+    scl enable rh-maven33 "mvn clean install"
 
     echo "bumping to version $1 in branch $2"
 
     scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$1"
     scl enable rh-maven33 "mvn clean install"
-    commit_change_or_create_PR $1 $2 "pr-${2}-to-${1}"
-    cd ..
-
-    cd che-docs
-    git checkout $2
-    scl enable rh-maven33 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[$1]"
-    scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
     commit_change_or_create_PR $1 $2 "pr-${2}-to-${1}"
     cd ..
 
@@ -327,7 +322,6 @@ bump_version() {
     scl enable rh-maven33 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[$1]"
     scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
     sed -i -e "s#<che.dashboard.version>.*<\/che.dashboard.version>#<che.dashboard.version>$1<\/che.dashboard.version>#" pom.xml
-    sed -i -e "s#<che.docs.version>.*<\/che.docs.version>#<che.docs.version>$1<\/che.docs.version>#" pom.xml
     sed -i -e "s#<che.version>.*<\/che.version>#<che.version>$1<\/che.version>#" pom.xml
     commit_change_or_create_PR $1 $2 "pr-${2}-to-${1}"
     cd ..    

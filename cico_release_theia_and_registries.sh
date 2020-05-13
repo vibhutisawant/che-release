@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#include common scripts
+. ./cico_common.sh
+
 # this script should be called by cico_release.sh 
 # this script requires skopeo and jq. To install: sudo yum install -y skopeo jq
 
@@ -35,42 +38,11 @@ releaseCheContainer()
     echo "[INFO] Running ${jobURL} ..." 
 
     # wait until the job has completed and the container is live
-    containerExists=0
-    count=1
-    (( timeout_intervals=timeout*3 ))
-    while [[ $count -le $timeout_intervals ]]; do # echo $count
-        sleep 20s
-        echo "       [$count/$timeout_intervals] Verify ${containerURL} exists..." 
-        # check if the container exists
-        verifyContainerExists "${containerURL}"
-        if [[ ${containerExists} -eq 1 ]]; then break; fi
-        (( count=count+1 ))
-    done
-    # or report an error
-    if [[ ${containerExists} -eq 0 ]]; then
-        echo "[ERROR] Did not find ${containerURL} after ${timeout} minutes - script must exit!"
-        exit 1;
-    fi
+    verifyContainerExistsWithTimeout ${containerURL} ${timeout}
 
     rm -f ./make-release.sh
     popd >/dev/null || exit
     echo 
-}
-
-# for a given container URL, check if it exists and its digest can be read
-verifyContainerExists ()
-{
-    this_containerURL="${1}"
-    result="$(skopeo inspect "docker://${this_containerURL}" 2>&1)"
-    if [[ $result == *"Error reading manifest"* ]] || [[ $result == *"no such image" ]] || [[ $result == *"manifest unknown" ]]; then # image does not exist
-        containerExists=0
-    else
-        digest="$(echo "$result" | jq -r '.Digest' 2>&1)"
-        if [[ $digest != "error"* ]] && [[ $digest != *"Invalid"* ]]; then
-            containerExists=1
-            echo "[INFO] Found ${this_containerURL} (${digest})"
-        fi
-    fi
 }
 
 # collect commandline args in order:

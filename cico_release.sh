@@ -33,15 +33,16 @@ loadMvnSettingsGpgKey() {
 
 installDeps(){
     set +x
-    yum -y update
+    yum -y update 
     yum -y install centos-release-scl-rh java-1.8.0-openjdk-devel git skopeo
-    yum -y install rh-maven33
+    yum -y install rh-maven35
     yum install -y yum-utils device-mapper-persistent-data lvm2
     yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
     curl -sL https://rpm.nodesource.com/setup_10.x | bash -
     yum-config-manager --add-repo https://dl.yarnpkg.com/rpm/yarn.repo
     yum install -y docker-ce nodejs yarn gcc-c++ make jq hub
+    echo "BASH VERSION = $BASH_VERSION"
     service docker start
 }
 
@@ -61,62 +62,71 @@ evaluateCheVariables() {
 }
 
 releaseCheDashboard()
-{
-    set -x
+{   
     cd che-dashboard
-    docker build -t ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} -f apache.Dockerfile .
-    echo y | docker push ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}
-    containerURL="quay.io/eclipse/che-dashboard:${CHE_VERSION}"
+    containerURL="${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}"
 
-    echo "${containerURL}"
+    docker build -t ${containerURL} -f apache.Dockerfile .
+    if [[ $? -ne 0 ]]; then
+        die_with  "docker build of ${containerURL} image is failed!"
+    fi
+
+    echo y | docker push ${containerURL}
+    if [[ $? -ne 0 ]]; then
+        die_with  "docker push of ${containerURL} image is failed!"
+    fi
+
     verifyContainerExistsWithTimeout ${containerURL} 30
 
     echo "[INFO] Workspace loader has been released"
-    
-    cd ..
-    set +x
 }
 
 releaseCheWorkspaceLoader()
 {
     set -x
-    cd che-workspace-loader
-    docker build -t ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} -f apache.Dockerfile .
-    echo y | docker push ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}
-    containerURL="quay.io/eclipse/che-dashboard:${CHE_VERSION}"
 
-    echo "${containerURL}"
+    cd che-workspace-loader
+    containerURL="${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}"
+
+    docker build -t ${containerURL} -f apache.Dockerfile .
+    if [[ $? -ne 0 ]]; then
+        die_with  "docker build of ${containerURL} image is failed!"
+    fi
+
+    echo y | docker push ${containerURL}
+    if [[ $? -ne 0 ]]; then
+        die_with  "docker push of ${containerURL} image is failed!"
+    fi
+
     verifyContainerExistsWithTimeout ${containerURL} 30
 
     echo "[INFO] Workspace loader has been released"
-    cd ..
-    set +x
 }
 
 releaseCheServer() {
-    echo "test"
     set -x
-    cd che-parent
-    scl enable rh-maven33 "mvn clean install -U -Pcodenvy-release -DskipTests=true -Dskip-validate-sources  -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
+    if [[ $RELEASE_CHE_PARENT=true ]]; then
+        cd che-parent
+        scl enable rh-maven35 "mvn clean install -U -Pcodenvy-release -DskipTests=true -Dskip-validate-sources  -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
 
-    if [ $? -eq 0 ]; then
-        echo 'Build Success!'
-        echo 'Going to deploy artifacts'
-        scl enable rh-maven33 "mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DskipTests=true -Dskip-validate-sources -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
-        cd ..
-    else
-        echo 'Build Failed!'
-        exit 1
+        if [ $? -eq 0 ]; then
+            echo 'Build Success!'
+            echo 'Going to deploy artifacts'
+            scl enable rh-maven35 "mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DskipTests=true -Dskip-validate-sources -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
+            cd ..
+        else
+            echo 'Build Failed!'
+            exit 1
+        fi        
     fi
-    cd ..
-    
+
     cd che
-    scl enable rh-maven33 "mvn clean install -U -Pcodenvy-release -DskipTests=true -Dskip-validate-sources  -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
+    scl enable rh-maven35 "mvn clean install -U -Pcodenvy-release -DskipTests=true -Dskip-validate-sources  -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
 
     if [ $? -eq 0 ]; then
         echo 'Build Success!'
         echo 'Going to deploy artifacts'
-        scl enable rh-maven33 "mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DskipTests=true -Dskip-validate-sources -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
+        scl enable rh-maven35 "mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DskipTests=true -Dskip-validate-sources -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
         cd ..
     else
         echo 'Build Failed!'
@@ -158,10 +168,14 @@ checkoutProject() {
 setupGitconfig() {
   git config --global user.name "Mykhailo Kuznietsov"
   git config --global user.email mkuznets@redhat.com
+
+  # hub CLI configuration
+  git config --global push.default matching
+  export GITHUB_TOKEN=$CHE_BOT_GITHUB_TOKEN
 }
 
 createTags() {
-    tagAndCommit che-parent
+    #tagAndCommit che-parent
     tagAndCommit che-dashboard
     tagAndCommit che-workspace-loader
     tagAndCommit che
@@ -223,58 +237,46 @@ buildImages() {
 
     # BUILD IMAGES
     for image_dir in ${DOCKER_FILES_LOCATIONS[@]}
-     do
-         bash $(pwd)/${image_dir}/build.sh --tag:${TAG} 
-         if [[ ${image_dir} == "che/dockerfiles/che" ]]; then
-           #CENTOS SINGLE USER
-           BUILD_ASSEMBLY_DIR=$(echo che/assembly/assembly-main/target/eclipse-che-*/eclipse-che-*/)
-           LOCAL_ASSEMBLY_DIR="${image_dir}/eclipse-che"
-           if [[ -d "${LOCAL_ASSEMBLY_DIR}" ]]; then
-               rm -r "${LOCAL_ASSEMBLY_DIR}"
-           fi
-           cp -r "${BUILD_ASSEMBLY_DIR}" "${LOCAL_ASSEMBLY_DIR}"
-           docker build -t ${REGISTRY}/${ORGANIZATION}/che-server:${TAG}-centos -f $(pwd)/${image_dir}/Dockerfile.centos $(pwd)/${image_dir}/
-         fi
-         if [[ $? -ne 0 ]]; then
+      do
+        if [[ ${image_dir} == "che/dockerfiles/che" ]]; then
+          bash $(pwd)/${image_dir}/build.sh --tag:${TAG} --build-arg:"CHE_DASHBOARD_VERSION=${CHE_VERSION},CHE_WORKSPACE_LOADER_VERSION=${CHE_VERSION}"  
+        else
+          bash $(pwd)/${image_dir}/build.sh --tag:${TAG} 
+        fi
+        if [[ $? -ne 0 ]]; then
            echo "ERROR:"
            echo "build of '${image_dir}' image is failed!"
            exit 1
-         fi
-     done
+        fi
+      done
 }
 
 tagLatestImages() {
     for image in ${IMAGES_LIST[@]}
      do
          echo y | docker tag "${image}:$1" "${image}:latest"
-         if [[ ${image} == "${REGISTRY}/${ORGANIZATION}/che-server" ]]; then
-           docker tag "${image}:$1-centos" "${image}:latest-centos"
-         fi
          if [[ $? -ne 0 ]]; then
            die_with  "docker tag of '${image}' image is failed!"
          fi
      done
 }
 
-pushImagesOnQuay() {
-    #PUSH IMAGES
-      if [[ -n "${QUAY_ECLIPSE_CHE_USERNAME}" ]] && [[ -n "${QUAY_ECLIPSE_CHE_PASSWORD}" ]]; then
+loginQuay() {
+    if [[ -n "${QUAY_ECLIPSE_CHE_USERNAME}" ]] && [[ -n "${QUAY_ECLIPSE_CHE_PASSWORD}" ]]; then
         docker login -u "${QUAY_ECLIPSE_CHE_USERNAME}" -p "${QUAY_ECLIPSE_CHE_PASSWORD}" "${REGISTRY}"
     else
         echo "Could not login, missing credentials for pushing to the '${ORGANIZATION}' organization"
-         return
+        die_with  "failed to login on Quay!"
     fi
+}
+
+pushImagesOnQuay() {
+    #PUSH IMAGES
     for image in ${IMAGES_LIST[@]}
         do
             echo y | docker push "${image}:$1"
             if [[ $2 == "pushLatest" ]]; then
                 echo y | docker push "${image}:latest"
-            fi
-            if [[ ${image} == "${REGISTRY}/${ORGANIZATION}/che-server" ]]; then
-                if [[ $2 == "pushLatest" ]]; then
-                echo y | docker push "${REGISTRY}/${ORGANIZATION}/che-server:latest-centos"
-                fi
-            echo y | docker push "${REGISTRY}/${ORGANIZATION}/che-server:$1-centos"
             fi
             if [[ $? -ne 0 ]]; then
             die_with  "docker push of '${image}' image is failed!"
@@ -283,6 +285,8 @@ pushImagesOnQuay() {
 }
 
 commitChangeOrCreatePR() {
+    set +e
+
     aVERSION="$1"
     aBRANCH="$2"
     PR_BRANCH="$3"
@@ -301,46 +305,48 @@ commitChangeOrCreatePR() {
         git checkout "${PR_BRANCH}"
         git pull origin "${PR_BRANCH}"
         git push origin "${PR_BRANCH}"
-        #lastCommitComment="$(git log -1 --pretty=%B)"
-        #hub pull-request -o -f -m "${lastCommitComment} ${lastCommitComment}" -b "${aBRANCH}" -h "${PR_BRANCH}"
+        lastCommitComment="$(git log -1 --pretty=%B)"
+        hub pull-request -f -m "${lastCommitComment}" -b "${aBRANCH}" -h "${PR_BRANCH}"
     fi
+    
+    set -e
 }
 
 bumpVersion() {
     set -x
 
-    cd che-parent
-    git checkout $2
+    #cd che-parent
+    #git checkout $2
 
-    echo "[info]bumping to version $1 in branch $2"
+    #echo "[info]bumping to version $1 in branch $2"
 
     # install previous version, in case it is not available in central repo
     # which is needed for dependent projects
     
-    scl enable rh-maven33 "mvn clean install"
-    scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$1"
-    scl enable rh-maven33 "mvn clean install"
-    commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
-    cd ..
+    #scl enable rh-maven35 "mvn clean install"
+    #scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$1"
+    #scl enable rh-maven35 "mvn clean install"
+    #commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
+    #cd ..
 
     cd che-dashboard
     git checkout $2
-    scl enable rh-maven33 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[$1]"
-    scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
+    #scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[$1]"
+    scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
     commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
     cd ..
 
     cd che-workspace-loader
     git checkout $2
-    scl enable rh-maven33 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[$1]"
-    scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
+    #scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[$1]"
+    scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
     commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
     cd ..
     
     cd che
     git checkout $2
-    scl enable rh-maven33 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[$1]"
-    scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
+    #scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[$1]"
+    scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
     sed -i -e "s#<che.dashboard.version>.*<\/che.dashboard.version>#<che.dashboard.version>$1<\/che.dashboard.version>#" pom.xml
     sed -i -e "s#<che.version>.*<\/che.version>#<che.version>$1<\/che.version>#" pom.xml
     commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
@@ -348,42 +354,42 @@ bumpVersion() {
 }
 
 prepareRelease() {
-    cd che-parent
+    #cd che-parent
     # install previous version, in case it is not available in central repo
     # which is needed for dependent projects
-    scl enable rh-maven33 "mvn clean install"
-    scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}"
-    scl enable rh-maven33 "mvn clean install"
+    #scl enable rh-maven35 "mvn clean install"
+    #scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}"
+    #scl enable rh-maven35 "mvn clean install"
     #mvn clean install
     #mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}
     #mvn clean install
-    cd ..
+    #cd ..
     
-    echo "[INFO] Che Parent version has been updated"
+    #echo "[INFO] Che Parent version has been updated"
     
     cd che-dashboard
-    scl enable rh-maven33 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]"
-    scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=${CHE_VERSION}"
-    #mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]
-    #mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=${CHE_VERSION}
+    #scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]"
+    scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}"
+    #mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]
+    #mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}
     cd ..
 
     echo "[INFO] Che Dashboard version has been updated"
 
     cd che-workspace-loader
-    scl enable rh-maven33 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]"
-    scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=${CHE_VERSION}"
-    #mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]
-    #mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=${CHE_VERSION}
+    #scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]"
+    scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}"
+    #mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]
+    mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}
     cd ..
     
     echo "[INFO] Che Workspace Loader version has been updated"
 
     cd che
-    scl enable rh-maven33 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]"
-    scl enable rh-maven33 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=${CHE_VERSION}"
-    #mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]
-    #mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=${CHE_VERSION}
+    #scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]"
+    scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}"
+    #mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]
+    mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}
 
     echo "[INFO] Che Server version has been updated"
 
@@ -396,6 +402,7 @@ prepareRelease() {
     # TODO more elegant way to execute these scripts
     cd .ci
     ./set_tag_version_images_linux.sh ${CHE_VERSION}
+
     echo "[INFO] Tag versions of images have been set in che-server"
 
     cd ../..
@@ -416,6 +423,7 @@ bumpVersions() {
     bumpVersion ${NEXTVERSION_Z} ${BRANCH}
 }
 
+
 loadJenkinsVars
 loadMvnSettingsGpgKey
 installDeps
@@ -424,12 +432,15 @@ setupGitconfig
 evaluateCheVariables
 
 # release che-theia, machine-exec and devfile-registry
-./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 &
-./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 &
-./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 &
+{ ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
+{ ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
+{ ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
+waitForPids $pid_1 $pid_2 $pid_3
 wait
 # then release plugin-registry (depends on che-theia and machine-exec)
-./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 &
+
+{ ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
+waitForPids $pid_4
 wait
 
 # release of che should start only when all necessary release images are available on Quay
@@ -437,8 +448,11 @@ checkoutProjects
 prepareRelease
 createTags
 
-releaseCheDashboard &
-releaseCheWorkspaceLoader &
+loginQuay
+
+{ ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
+{ ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
+waitForPids $pid_5 $pid_5
 wait
 
 releaseCheServer

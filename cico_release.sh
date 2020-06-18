@@ -425,10 +425,10 @@ bumpVersions() {
 }
 
 
-#loadJenkinsVars
-#loadMvnSettingsGpgKey
-#installDeps
-#setupGitconfig
+loadJenkinsVars
+loadMvnSettingsGpgKey
+installDeps
+setupGitconfig
 
 evaluateCheVariables
 

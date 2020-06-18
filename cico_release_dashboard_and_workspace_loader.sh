@@ -11,26 +11,35 @@ releaseCheContainer()
 {
     directory="$1"
     containerURL="$2"
+    echo "$1 $2"
+    sleep 5
+    if [[ $1 = "che-dashboard" ]]; then
+        echo "error!"
+        exit 1
+    fi
+    sleep 5
+    echo "success!"
+    exit 0
     # $3 - timeout in mins after which the script should fail, in 20s increments. Default: 120 mins
-    if [[ "$3" ]]; then timeout="$3"; else timeout=120; fi
+    #if [[ "$3" ]]; then timeout="$3"; else timeout=120; fi
 
-    pushd "$1" > /dev/null || exit 1
-    docker build -t ${containerURL} -f apache.Dockerfile .
-    if [[ $? -ne 0 ]]; then
-        die_with  "docker build of ${containerURL} image is failed!"
-    fi
+    # pushd "$1" > /dev/null || exit 1
+    # docker build -t ${containerURL} -f apache.Dockerfile .
+    # if [[ $? -ne 0 ]]; then
+    #     die_with  "docker build of ${containerURL} image is failed!"
+    # fi
 
-    echo y | docker push ${containerURL}
-    if [[ $? -ne 0 ]]; then
-        die_with  "docker push of ${containerURL} image is failed!"
-    fi
+    # echo y | docker push ${containerURL}
+    # if [[ $? -ne 0 ]]; then
+    #     die_with  "docker push of ${containerURL} image is failed!"
+    # fi
 
-    verifyContainerExistsWithTimeout ${containerURL} $3
+    # verifyContainerExistsWithTimeout ${containerURL} $3
 
-    echo "[INFO] $1 has been released"
+    # echo "[INFO] $1 has been released"
 
-    popd >/dev/null || exit
-    echo 
+    # popd >/dev/null || exit
+    # echo 
 }
 
 

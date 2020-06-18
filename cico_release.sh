@@ -42,7 +42,7 @@ installDeps(){
     curl -sL https://rpm.nodesource.com/setup_10.x | bash -
     yum-config-manager --add-repo https://dl.yarnpkg.com/rpm/yarn.repo
     yum install -y docker-ce nodejs yarn gcc-c++ make jq hub
-    yum install psmisc
+    yum install -y psmisc
     echo "BASH VERSION = $BASH_VERSION"
     service docker start
 }

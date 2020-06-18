@@ -1,0 +1,13 @@
+# temp files
+.idea
+out
+
+# che modules
+che-docs/
+che-parent/
+che-dashboard/
+che-workspace-loader/
+che/
+
+test.sh
+release-project.sh

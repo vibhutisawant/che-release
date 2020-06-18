@@ -65,7 +65,7 @@ waitForPids() {
     ----------
     "
 
-    wait -n $* || {
+    wait $* || {
         echo  "Exit due to failure; kill running processes"
         trap "kill ${procslist} 2>/dev/null" EXIT
     exit 1

@@ -53,7 +53,7 @@ verifyContainerExists()
 }
 
 waitForPids() {
-    TODO make this work
+    # TODO make this work
     pstree -p | grep -v grep > out
     procs=$(pstree -p | grep -v grep | grep -E "cico_release_theia_and_registries|cico_release_dashboard_and_workspace_loader" | sed -r -e "s#--# #g")
     for p in $procs; do p=$(echo "${p}" | tr "|" -d | sed -r -e "s#.*\(([0-9]+)\).*#\1#g" | tr -d "-"); procslist="${procslist} ${p}"; done

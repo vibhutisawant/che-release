@@ -425,19 +425,19 @@ bumpVersions() {
 }
 
 
-loadJenkinsVars
-loadMvnSettingsGpgKey
-installDeps
-setupGitconfig
+#loadJenkinsVars
+#loadMvnSettingsGpgKey
+#installDeps
+#setupGitconfig
 
 evaluateCheVariables
 
 # release che-theia, machine-exec and devfile-registry
-# { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
+{ ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
 # { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
 # { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
-# waitForPids $pid_1 # $pid_2 $pid_3
-#wait
+waitForPids $pid_1 # $pid_2 $pid_3
+wait
 # then release plugin-registry (depends on che-theia and machine-exec)
 
 # { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
@@ -451,12 +451,12 @@ evaluateCheVariables
 
 # loginQuay
 
-{ ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
-{ ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
-waitForPids $pid_5 $pid_5
-wait
+# { ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
+# { ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
+#waitForPids $pid_5 $pid_6
+#wait
 
-echo "fail!"
+# echo "fail!"
 
 #releaseCheServer
 #buildImages  ${CHE_VERSION}

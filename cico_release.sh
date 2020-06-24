@@ -34,8 +34,13 @@ loadMvnSettingsGpgKey() {
 installDeps(){
     set +x
     yum -y update 
-    yum -y install centos-release-scl-rh java-1.8.0-openjdk-devel git skopeo
-    yum -y install rh-maven35
+    yum -y install git skopeo
+    yum -y install java-11-openjdk-devel git
+    mkdir -p /opt/apache-maven && curl -sSL https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz | tar -xz --strip=1 -C /opt/apache-maven
+    export JAVA_HOME=/usr/lib/jvm/java-11-openjdk
+    export PATH="/usr/lib/jvm/java-11-openjdk:/opt/apache-maven/bin:/usr/bin:${PATH:-/bin:/usr/bin}"
+    export JAVACONFDIRS="/etc/java${JAVACONFDIRS:+:}${JAVACONFDIRS:-}"
+    export M2_HOME="/opt/apache-maven"
     yum install -y yum-utils device-mapper-persistent-data lvm2
     yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
     yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
@@ -109,12 +114,12 @@ releaseCheServer() {
     set -x
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
         cd che-parent
-        scl enable rh-maven35 "mvn clean install -U -Pcodenvy-release -DskipTests=true -Dskip-validate-sources  -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
+        mvn clean install -U -Pcodenvy-release -DskipTests=true -Dskip-validate-sources  -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
 
         if [ $? -eq 0 ]; then
             echo 'Build Success!'
             echo 'Going to deploy artifacts'
-            scl enable rh-maven35 "mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DskipTests=true -Dskip-validate-sources -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
+            mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DskipTests=true -Dskip-validate-sources -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
             cd ..
         else
             echo 'Build Failed!'
@@ -123,12 +128,12 @@ releaseCheServer() {
     fi
 
     cd che
-    scl enable rh-maven35 "mvn clean install -U -Pcodenvy-release -DskipTests=true -Dskip-validate-sources  -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
+    mvn clean install -U -Pcodenvy-release -DskipTests=true -Dskip-validate-sources  -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
 
     if [ $? -eq 0 ]; then
         echo 'Build Success!'
         echo 'Going to deploy artifacts'
-        scl enable rh-maven35 "mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DskipTests=true -Dskip-validate-sources -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
+        mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DskipTests=true -Dskip-validate-sources -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
         cd ..
     else
         echo 'Build Failed!'
@@ -326,9 +331,9 @@ bumpVersion() {
         #install previous version, in case it is not available in central repo
         #which is needed for dependent projects
         
-        scl enable rh-maven35 "mvn clean install"
-        scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}"
-        scl enable rh-maven35 "mvn clean install"
+        mvn clean install
+        mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}
+        mvn clean install
         commitChangeOrCreatePR ${CHE_VERSION} $2 "pr-${2}-to-${1}"
         cd ..
     fi
@@ -336,27 +341,27 @@ bumpVersion() {
     cd che-dashboard
     git checkout $2
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-        scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]"
+        mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]
     fi
-    scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
+    mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1
     commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
     cd ..
 
     cd che-workspace-loader
     git checkout $2
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-        scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]"
+        mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]
     fi
-    scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
+    mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1
     commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
     cd ..
     
     cd che
     git checkout $2
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-        scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]"
+        mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]
     fi
-    scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
+    mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1
     sed -i -e "s#<che.dashboard.version>.*<\/che.dashboard.version>#<che.dashboard.version>$1<\/che.dashboard.version>#" pom.xml
     sed -i -e "s#<che.version>.*<\/che.version>#<che.version>$1<\/che.version>#" pom.xml
     commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
@@ -379,9 +384,9 @@ prepareRelease() {
         cd che-parent
         #install previous version, in case it is not available in central repo
         #which is needed for dependent projects
-        scl enable rh-maven35 "mvn clean install"
-        scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}"
-        scl enable rh-maven35 "mvn clean install"
+        mvn clean install
+        mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}
+        mvn clean install
         mvn clean install
         mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}
         mvn clean install
@@ -392,27 +397,27 @@ prepareRelease() {
     
     cd che-dashboard
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-        scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]"
+        mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]
     fi
-    scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}"
+    mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}
     cd ..
 
     echo "[INFO] Che Dashboard version has been updated"
 
     cd che-workspace-loader
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-        scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]"
+        mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]
     fi
-    scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}"
+    mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}
     cd ..
     
     echo "[INFO] Che Workspace Loader version has been updated"
 
     cd che
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-        scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]"
+        mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]
     fi
-    scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}"
+    mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}
 
     echo "[INFO] Che Server version has been updated"
 
@@ -446,7 +451,6 @@ bumpVersions() {
     bumpVersion ${NEXTVERSION_Z} ${BRANCH}
 }
 
-
 loadJenkinsVars
 loadMvnSettingsGpgKey
 installDeps
@@ -458,7 +462,7 @@ evaluateCheVariables
 { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
 { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
 { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
-waitForPids $pid_1 # $pid_2 $pid_3
+waitForPids $pid_1 $pid_2 $pid_3
 wait
 # then release plugin-registry (depends on che-theia and machine-exec)
 
@@ -477,8 +481,6 @@ loginQuay
 { ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
 waitForPids $pid_5 $pid_6
 wait
-
-echo "fail!"
 
 releaseCheServer
 buildImages  ${CHE_VERSION}

@@ -60,6 +60,7 @@ evaluateCheVariables() {
         BASEBRANCH="${BRANCH}"
     fi
     echo "Basebranch: ${BASEBRANCH}" 
+    echo "Release che-parent: ${CHE_VERSION}"
 }
 
 releaseCheDashboard()
@@ -106,7 +107,7 @@ releaseCheWorkspaceLoader()
 
 releaseCheServer() {
     set -x
-    if [[ $RELEASE_CHE_PARENT=true ]]; then
+    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
         cd che-parent
         scl enable rh-maven35 "mvn clean install -U -Pcodenvy-release -DskipTests=true -Dskip-validate-sources  -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE"
 
@@ -176,7 +177,9 @@ setupGitconfig() {
 }
 
 createTags() {
-    #tagAndCommit che-parent
+    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
+        tagAndCommit che-parent
+    fi
     tagAndCommit che-dashboard
     tagAndCommit che-workspace-loader
     tagAndCommit che
@@ -315,38 +318,44 @@ commitChangeOrCreatePR() {
 
 bumpVersion() {
     set -x
+    echo "[info]bumping to version $1 in branch $2"
 
-    #cd che-parent
-    #git checkout $2
-
-    #echo "[info]bumping to version $1 in branch $2"
-
-    # install previous version, in case it is not available in central repo
-    # which is needed for dependent projects
-    
-    #scl enable rh-maven35 "mvn clean install"
-    #scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DnewVersion=$1"
-    #scl enable rh-maven35 "mvn clean install"
-    #commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
-    #cd ..
+    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
+        cd che-parent
+        git checkout $2
+        #install previous version, in case it is not available in central repo
+        #which is needed for dependent projects
+        
+        scl enable rh-maven35 "mvn clean install"
+        scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}"
+        scl enable rh-maven35 "mvn clean install"
+        commitChangeOrCreatePR ${CHE_VERSION} $2 "pr-${2}-to-${1}"
+        cd ..
+    fi
 
     cd che-dashboard
     git checkout $2
-    #scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[$1]"
+    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
+        scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]"
+    fi
     scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
     commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
     cd ..
 
     cd che-workspace-loader
     git checkout $2
-    #scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[$1]"
+    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
+        scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]"
+    fi
     scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
     commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
     cd ..
     
     cd che
     git checkout $2
-    #scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[$1]"
+    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
+        scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]"
+    fi
     scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1"
     sed -i -e "s#<che.dashboard.version>.*<\/che.dashboard.version>#<che.dashboard.version>$1<\/che.dashboard.version>#" pom.xml
     sed -i -e "s#<che.version>.*<\/che.version>#<che.version>$1<\/che.version>#" pom.xml
@@ -354,43 +363,56 @@ bumpVersion() {
     cd ..    
 }
 
+bumpImagesInXbranch() {
+    cd che
+    git checkout ${BRANCH}
+    cd .ci
+    ./set_tag_version_images_linux.sh ${CHE_VERSION}
+    cd ..
+    git commit -asm "Release version ${CHE_VERSION}"
+    git push origin ${BRANCH}
+}
+
 prepareRelease() {
-    #cd che-parent
-    # install previous version, in case it is not available in central repo
-    # which is needed for dependent projects
-    #scl enable rh-maven35 "mvn clean install"
-    #scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}"
-    #scl enable rh-maven35 "mvn clean install"
-    #mvn clean install
-    #mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}
-    #mvn clean install
-    #cd ..
+
+    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
+        cd che-parent
+        #install previous version, in case it is not available in central repo
+        #which is needed for dependent projects
+        scl enable rh-maven35 "mvn clean install"
+        scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}"
+        scl enable rh-maven35 "mvn clean install"
+        mvn clean install
+        mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}
+        mvn clean install
+        cd ..
+    fi
     
     #echo "[INFO] Che Parent version has been updated"
     
     cd che-dashboard
-    #scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]"
+    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
+        scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]"
+    fi
     scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}"
-    #mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]
-    #mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}
     cd ..
 
     echo "[INFO] Che Dashboard version has been updated"
 
     cd che-workspace-loader
-    #scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]"
+    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
+        scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]"
+    fi
     scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}"
-    #mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]
-    mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}
     cd ..
     
     echo "[INFO] Che Workspace Loader version has been updated"
 
     cd che
-    #scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]"
+    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
+        scl enable rh-maven35 "mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]"
+    fi
     scl enable rh-maven35 "mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}"
-    #mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]
-    mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}
 
     echo "[INFO] Che Server version has been updated"
 
@@ -434,33 +456,35 @@ evaluateCheVariables
 
 # release che-theia, machine-exec and devfile-registry
 { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
-# { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
-# { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
+{ ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
+{ ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
 waitForPids $pid_1 # $pid_2 $pid_3
 wait
 # then release plugin-registry (depends on che-theia and machine-exec)
 
-# { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
-# waitForPids $pid_4
-# wait
+{ ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
+waitForPids $pid_4
+wait
 
-# release of che should start only when all necessary release images are available on Quay
-# checkoutProjects
-# prepareRelease
-# createTags
+#release of che should start only when all necessary release images are available on Quay
+checkoutProjects
+prepareRelease
+createTags
 
-# loginQuay
+loginQuay
 
-# { ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
-# { ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
-#waitForPids $pid_5 $pid_6
-#wait
+{ ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
+{ ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
+waitForPids $pid_5 $pid_6
+wait
 
-# echo "fail!"
+echo "fail!"
 
-#releaseCheServer
-#buildImages  ${CHE_VERSION}
-#tagLatestImages ${CHE_VERSION}
-#pushImagesOnQuay ${CHE_VERSION} pushLatest
+releaseCheServer
+buildImages  ${CHE_VERSION}
+tagLatestImages ${CHE_VERSION}
+pushImagesOnQuay ${CHE_VERSION} pushLatest
 
-#bumpVersions
+bumpVersions
+
+bumpImagesInXbranch

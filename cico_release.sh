@@ -114,12 +114,12 @@ releaseCheServer() {
     set -x
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
         cd che-parent
-        mvn clean install -U -Pcodenvy-release -DskipTests=true -Dskip-validate-sources  -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
+        mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
 
         if [ $? -eq 0 ]; then
             echo 'Build Success!'
             echo 'Going to deploy artifacts'
-            mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DskipTests=true -Dskip-validate-sources -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
+            mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DautoReleaseOnClose=true -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
             cd ..
         else
             echo 'Build Failed!'
@@ -128,12 +128,12 @@ releaseCheServer() {
     fi
 
     cd che
-    mvn clean install -U -Pcodenvy-release -DskipTests=true -Dskip-validate-sources  -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
+    mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
 
     if [ $? -eq 0 ]; then
         echo 'Build Success!'
         echo 'Going to deploy artifacts'
-        mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DskipTests=true -Dskip-validate-sources -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
+        mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DautoReleaseOnClose=true -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
         cd ..
     else
         echo 'Build Failed!'
@@ -451,42 +451,59 @@ bumpVersions() {
     bumpVersion ${NEXTVERSION_Z} ${BRANCH}
 }
 
-loadJenkinsVars
-loadMvnSettingsGpgKey
-installDeps
-setupGitconfig
+# releaseOperator() {
 
-evaluateCheVariables
 
-# release che-theia, machine-exec and devfile-registry
-{ ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
-{ ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
-{ ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
-waitForPids $pid_1 $pid_2 $pid_3
-wait
-# then release plugin-registry (depends on che-theia and machine-exec)
+#     git clone git@github.com:eclipse/che-operator.git
+#     cd che-operator
 
-{ ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
-waitForPids $pid_4
-wait
+#     ./make-release.sh ${CHE_VERSION} --release --release-olm-files 
+#     # TODO visually inspect diffs
+#     git diff 
+#     ./make-release.sh ${CHE_VERSION} --push-olm-files
+#     ./make-release.sh ${CHE_VERSION} --push-git-changes --pull-requests
+# }
 
-#release of che should start only when all necessary release images are available on Quay
-checkoutProjects
-prepareRelease
-createTags
 
-loginQuay
+# loadJenkinsVars
+# loadMvnSettingsGpgKey
+# installDeps
+# setupGitconfig
 
-{ ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
-{ ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
-waitForPids $pid_5 $pid_6
-wait
+# evaluateCheVariables
 
-releaseCheServer
-buildImages  ${CHE_VERSION}
-tagLatestImages ${CHE_VERSION}
-pushImagesOnQuay ${CHE_VERSION} pushLatest
+# # release che-theia, machine-exec and devfile-registry
+#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
+#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
+#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
+# waitForPids $pid_1 $pid_2 $pid_3
+# wait
+# # then release plugin-registry (depends on che-theia and machine-exec)
 
-bumpVersions
+#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
+# waitForPids $pid_4
+# wait
 
-bumpImagesInXbranch
+# #release of che should start only when all necessary release images are available on Quay
+# checkoutProjects
+# prepareRelease
+# createTags
+
+# loginQuay
+
+# { ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
+# { ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
+# waitForPids $pid_5 $pid_6
+# wait
+
+# releaseCheServer
+# buildImages  ${CHE_VERSION}
+# tagLatestImages ${CHE_VERSION}
+# pushImagesOnQuay ${CHE_VERSION} pushLatest
+
+# bumpVersions
+
+# bumpImagesInXbranch
+
+#releaseOperator
+

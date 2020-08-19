@@ -469,9 +469,8 @@ releaseOperator() {
     wget https://github.com/operator-framework/operator-sdk/releases/download/v0.10.0/operator-sdk-v0.10.0-x86_64-linux-gnu -O $OP_SDK_DIR/operator-sdk 
     chmod +x $OP_SDK_DIR/operator-sdk
 
-    BASE32_UTIL_PATH=$(pwd)/utils
-    # add base32 shortcut
-    export PATH="$PATH:$OP_SDK_DIR:$BASE32_UTIL_PATH"
+    # copy base32 python-based helper script into dir that's accessed from PATH (so it's accessible to this and other called scripts) 
+    cp -f ${SCRIPT_DIR}/utils/base32 /usr/local/bin/ && chmod +x /usr/local/bin/base32
 
     git clone git@github.com:eclipse/che-operator.git
     cd che-operator

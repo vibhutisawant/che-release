@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPT_DIR=$(cd "$(dirname "$0")" || exit; pwd)
+
 function die_with() 
 {
 	echo "$*" >&2

@@ -113,6 +113,15 @@ releaseCheWorkspaceLoader()
     echo "[INFO] Workspace loader has been released"
 }
 
+releaseCheDocs() {
+    tmpdir="$(mktemp -d)"
+    pushd "${tmpdir}" >/dev/null || exit
+    projectPath=eclipse/che-docs
+    rm -f ./make-release.sh && curl -sSLO "https://raw.githubusercontent.com/${projectPath}/master/make-release.sh" && chmod +x ./make-release.sh
+    ./make-release.sh --repo "git@github.com:${projectPath}" --version "${CHE_VERSION}" --trigger-release
+    popd >/dev/null || exit 
+}
+
 releaseCheServer() {
     set -x
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
@@ -507,6 +516,7 @@ loginQuay
 waitForPids $pid_5 $pid_6
 wait
 
+releaseCheDocs &
 releaseCheServer
 buildImages  ${CHE_VERSION}
 tagLatestImages ${CHE_VERSION}

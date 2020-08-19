@@ -1,14 +1,24 @@
 #!/bin/bash
 
-DECODE=0
+usage () {
+    echo "This is a replacement for base32 (from GNU coreutils), which is not easily available on ci-centos machines.
 
+Usage:
+  pipe content to be encoded into this executable, or pipe content with -d to decode.
+
+Examples:
+  echo 'some string that I used to know' | $0 # ONXW2ZJAON2HE2LOM4QHI2DBOQQESIDVONSWIIDUN4QGW3TPO4======
+  echo 'ONXW2ZJAON2HE2LOM4QHI2DBOQQESIDVONSWIIDUN4QGW3TPO4======' | $0 -d # some string that I used to know
+"
+    exit
+}
+
+DECODE=0
 for i in "$@"
 do
 case $i in
-    -d)
-    DECODE=1
-    shift # past argument=value
-    ;;
+    -d) DECODE=1; shift;;
+    --help|--version) usage; shift;;
 esac
 done
 

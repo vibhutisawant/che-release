@@ -1,0 +1,21 @@
+#!/bin/bash
+
+DECODE=0
+
+for i in "$@"
+do
+case $i in
+    -d)
+    DECODE=1
+    shift # past argument=value
+    ;;
+esac
+done
+
+read -t 60 TEXT
+
+if [ $DECODE -eq 1 ];then
+    python3 -c "import base64; print(base64.b32decode(bytearray('$TEXT', 'ascii')).decode('utf-8'))"    
+else
+    python3 -c "import base64; print(base64.b32encode(bytearray('$TEXT', 'ascii')).decode('utf-8'))"
+fi

@@ -47,6 +47,7 @@ installDeps(){
     curl -sL https://rpm.nodesource.com/setup_10.x | bash -
     yum-config-manager --add-repo https://dl.yarnpkg.com/rpm/yarn.repo
     yum install -y docker-ce nodejs yarn gcc-c++ make jq hub
+    yum install -y python3-pip wget yq podman
     yum install -y psmisc
     echo "BASH VERSION = $BASH_VERSION"
     service docker start
@@ -66,6 +67,7 @@ evaluateCheVariables() {
     fi
     echo "Basebranch: ${BASEBRANCH}" 
     echo "Release che-parent: ${RELEASE_CHE_PARENT}"
+
     echo "Autorelease on nexus: ${AUTORELEASE_ON_NEXUS}"
 }
 
@@ -341,10 +343,7 @@ bumpVersion() {
 
     cd che-dashboard
     git checkout $2
-    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-        mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]
-    fi
-    mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1
+    npm --no-git-tag-version version ${1}
     commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
     cd ..
 
@@ -393,16 +392,11 @@ prepareRelease() {
         mvn clean install
         cd ..
     fi
-    
-    #echo "[INFO] Che Parent version has been updated"
+    echo "[INFO] Che Parent version has been updated"
     
     cd che-dashboard
-    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-        mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]
-    fi
-    mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}
+    npm --no-git-tag-version version ${CHE_VERSION}
     cd ..
-
     echo "[INFO] Che Dashboard version has been updated"
 
     cd che-workspace-loader
@@ -411,7 +405,6 @@ prepareRelease() {
     fi
     mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}
     cd ..
-    
     echo "[INFO] Che Workspace Loader version has been updated"
 
     cd che
@@ -419,19 +412,16 @@ prepareRelease() {
         mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]
     fi
     mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}
-
     echo "[INFO] Che Server version has been updated"
 
     # Replace dependencies in che-server parent
     sed -i -e "s#<che.dashboard.version>.*<\/che.dashboard.version>#<che.dashboard.version>${CHE_VERSION}<\/che.dashboard.version>#" pom.xml
     sed -i -e "s#<che.version>.*<\/che.version>#<che.version>${CHE_VERSION}<\/che.version>#" pom.xml
-
     echo "[INFO] Dependencies updated in che-server parent"
 
     # TODO more elegant way to execute these scripts
     cd .ci
     ./set_tag_version_images_linux.sh ${CHE_VERSION}
-
     echo "[INFO] Tag versions of images have been set in che-server"
 
     cd ../..
@@ -452,19 +442,39 @@ bumpVersions() {
     bumpVersion ${NEXTVERSION_Z} ${BRANCH}
 }
 
-# releaseOperator() {
+releaseOperator() {
+    set +x
+    set -e
+    export QUAY_USERNAME=$QUAY_ECLIPSE_CHE_USERNAME
+    export QUAY_PASSWORD=$QUAY_ECLIPSE_CHE_PASSWORD
 
+    export GIT_USER=mkuznyetsov
+    export GIT_PASSWORD=none
 
-#     git clone git@github.com:eclipse/che-operator.git
-#     cd che-operator
+    #preinstall operator-courier and operator-sdk
+    pip3 install operator-courier==2.1.7
+    pip3 install yq
 
-#     ./make-release.sh ${CHE_VERSION} --release --release-olm-files 
-#     # TODO visually inspect diffs
-#     git diff 
-#     ./make-release.sh ${CHE_VERSION} --push-olm-files
-#     ./make-release.sh ${CHE_VERSION} --push-git-changes --pull-requests
-# }
+    OP_SDK_DIR=/opt/operator-sdk
+    mkdir -p $OP_SDK_DIR
+    wget https://github.com/operator-framework/operator-sdk/releases/download/v0.10.0/operator-sdk-v0.10.0-x86_64-linux-gnu -O $OP_SDK_DIR/operator-sdk 
+    chmod +x $OP_SDK_DIR/operator-sdk
 
+    BASE32_UTIL_PATH=$(pwd)/utils
+    # add base32 shortcut
+    export PATH="$PATH:$OP_SDK_DIR:$BASE32_UTIL_PATH"
+
+    git clone git@github.com:eclipse/che-operator.git
+    cd che-operator
+
+    echo "operator courier version"
+    operator-courier --version
+
+    git checkout ${BRANCH}
+    ./make-release.sh ${CHE_VERSION} --release --release-olm-files
+    git checkout ${CHE_VERSION}
+    ./make-release.sh ${CHE_VERSION} --push-git-changes --pull-requests  
+}
 
 loadJenkinsVars
 loadMvnSettingsGpgKey
@@ -501,10 +511,7 @@ releaseCheServer
 buildImages  ${CHE_VERSION}
 tagLatestImages ${CHE_VERSION}
 pushImagesOnQuay ${CHE_VERSION} pushLatest
-
 bumpVersions
-
 bumpImagesInXbranch
 
-#releaseOperator
-
+releaseOperator

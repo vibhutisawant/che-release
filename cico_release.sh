@@ -50,6 +50,8 @@ installDeps(){
     yum install -y python3-pip wget yq podman
     yum install -y psmisc
     echo "BASH VERSION = $BASH_VERSION"
+    wget https://rpmfind.net/linux/centos/8-stream/AppStream/x86_64/os/Packages/git-2.27.0-1.el8.x86_64.rpm
+    yum localinstall -y git-2.27.0-1.el8.x86_64.rpm
     service docker start
 }
 
@@ -526,4 +528,4 @@ evaluateCheVariables
 
 #DEBUG echo git version
 git --version
-releaseOperator
+# releaseOperator

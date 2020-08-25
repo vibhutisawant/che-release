@@ -43,7 +43,12 @@ installDeps(){
     sudo yum install -y centos-release-scl-rh
     subscription-manager repos --enable=rhel-server-rhscl-7-rpms || true
     sudo yum install -y rh-git218
-    scl enable rh-git218 bash || exit 1
+    # enable rh-git218 for all users/bash shells
+    echo "#!/bin/bash
+source scl_source enable rh-git218" > /etc/profile.d/enablerh-git218.sh && chmod +x /etc/profile.d/enablerh-git218.sh
+    # run the enablement script
+    /etc/profile.d/enablerh-git218.sh
+    # alias git='scl enable rh-git218 git' # another approach?
     git --version
 
     yum -y install skopeo

@@ -33,17 +33,30 @@ loadMvnSettingsGpgKey() {
 
 installDeps(){
     set +x
+
+    yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
     yum -y update 
-    yum -y install git skopeo
-    yum -y install java-11-openjdk-devel git
+
+    # update to git 2.9 via centos scl: https://access.redhat.com/solutions/3376721
+    sudo yum -y remove git*
+    sudo yum install -y centos-release-scl-rh
+    subscription-manager repos --enable=rhel-server-rhscl-7-rpms
+    sudo yum install -y centos-release-scl-rh
+    sudo yum info git --available
+    sudo yum search git
+    sudo yum install -y git
+    #scl enable rh-git29 bash
+    git --version
+
+    yum -y install skopeo
+    yum -y install java-11-openjdk-devel
     mkdir -p /opt/apache-maven && curl -sSL https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz | tar -xz --strip=1 -C /opt/apache-maven
     export JAVA_HOME=/usr/lib/jvm/java-11-openjdk
     export PATH="/usr/lib/jvm/java-11-openjdk:/opt/apache-maven/bin:/usr/bin:${PATH:-/bin:/usr/bin}"
     export JAVACONFDIRS="/etc/java${JAVACONFDIRS:+:}${JAVACONFDIRS:-}"
     export M2_HOME="/opt/apache-maven"
     yum install -y yum-utils device-mapper-persistent-data lvm2
-    yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
     curl -sL https://rpm.nodesource.com/setup_10.x | bash -
     yum-config-manager --add-repo https://dl.yarnpkg.com/rpm/yarn.repo
     yum install -y docker-ce nodejs yarn gcc-c++ make jq hub
@@ -51,15 +64,7 @@ installDeps(){
     yum install -y psmisc
     echo "BASH VERSION = $BASH_VERSION"
 
-    # update to git 2.9 via centos scl: https://access.redhat.com/solutions/3376721
-    sudo yum -y remove git*
-    sudo yum install -y centos-release-scl-rh
-    subscription-manager repos --enable=rhel-server-rhscl-7-rpms
-    sudo yum install -y centos-release-scl-rh
-    sudo yum install -y rh-git29
-    scl enable rh-git29 bash
-
-    git --version
+    # start docker daemon
     service docker start
 }
 
@@ -498,9 +503,9 @@ releaseOperator() {
 loadJenkinsVars
 loadMvnSettingsGpgKey
 installDeps
-setupGitconfig
+#setupGitconfig
 
-evaluateCheVariables
+#evaluateCheVariables
 
 # # release che-theia, machine-exec and devfile-registry
 #  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;

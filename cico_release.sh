@@ -51,8 +51,9 @@ installDeps(){
     yum install -y psmisc
     echo "BASH VERSION = $BASH_VERSION"
     sudo yum install -y https://centos7.iuscommunity.org/ius-release.rpm
-    sudo yum install -y yum-plugin-replace
-    sud yum replace -y git --replace-with git2u-all
+    sudo yum -y remove git*
+    sudo yum -y install git2u-all
+
     git --version
     service docker start
 }

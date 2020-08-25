@@ -35,38 +35,39 @@ installDeps(){
     set +x
 
     # enable epel and update to latest
-    yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-    yum -y update 
-
-    # update to git 2.18 via https://www.softwarecollections.org/en/scls/rhscl/rh-git218/
+    sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    sudo yum -y update 
     sudo yum -y remove git*
     sudo yum install -y centos-release-scl-rh
     subscription-manager repos --enable=rhel-server-rhscl-7-rpms || true
-    sudo yum install -y rh-git218 rh-git218-git-all rh-git218-runtime hub
-    # enable rh-git218 for all users/bash shells
-    echo "#!/bin/bash
-source scl_source enable rh-git218" > /etc/profile.d/enablerh-git218.sh && chmod +x /etc/profile.d/enablerh-git218.sh
-    # run the enablement script
-    /etc/profile.d/enablerh-git218.sh
-    alias git='scl enable rh-git218 bash -c git' # alias approach?
-    ls -1R /etc/opt/rh/rh-git218/
-    echo "---"
-    rpm -ql rh-git218
-    echo "---"
-    rpm -ql rh-git218-runtime
-    echo "---"
-    rpm -ql rh-git218-git
-    echo "---"
-    cat /opt/rh/rh-git218/enable
-    echo "---"
 
-    set -x
-    git --version 
-    scl enable rh-git218 bash -c git --version
-    echo "---"
+    # update to git 2.18 via https://www.softwarecollections.org/en/scls/rhscl/rh-git218/
+#     sudo yum install -y rh-git218 rh-git218-git-all rh-git218-runtime hub
+#     # enable rh-git218 for all users/bash shells
+#     echo "#!/bin/bash
+# source scl_source enable rh-git218" > /etc/profile.d/enablerh-git218.sh && chmod +x /etc/profile.d/enablerh-git218.sh
+#     # run the enablement script
+#     /etc/profile.d/enablerh-git218.sh
+#     alias git='scl enable rh-git218 bash -c git' # alias approach?
+#     ls -1R /etc/opt/rh/rh-git218/
+#     echo "---"
+#     rpm -ql rh-git218
+#     echo "---"
+#     rpm -ql rh-git218-runtime
+#     echo "---"
+#     rpm -ql rh-git218-git
+#     echo "---"
+#     cat /opt/rh/rh-git218/enable
+#     echo "---"
 
+#     set -x
+#     git --version 
+#     scl enable rh-git218 bash -c git --version
+#     echo "---"
+
+    # update to git 2.24 via https://repo.ius.io/7/x86_64/packages/g/
     sudo yum install -y https://repo.ius.io/ius-release-el7.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true
-    sudo yum install -y git
+    sudo yum install -y git224-all
     git --version || exit 1
 
     yum -y install skopeo

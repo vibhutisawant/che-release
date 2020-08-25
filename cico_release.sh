@@ -55,7 +55,7 @@ https://repo.ius.io/ius-release-el7.rpm \
 https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 
     sudo yum -y remove git*
-    sudo yum -y install git2u-all
+    sudo yum -y install git2u
 
     git --version
     service docker start

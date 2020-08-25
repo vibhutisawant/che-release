@@ -34,18 +34,16 @@ loadMvnSettingsGpgKey() {
 installDeps(){
     set +x
 
+    # enable epel and update to latest
     yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
     yum -y update 
 
-    # update to git 2.9 via centos scl: https://access.redhat.com/solutions/3376721
+    # update to git 2.18 via https://www.softwarecollections.org/en/scls/rhscl/rh-git218/
     sudo yum -y remove git*
     sudo yum install -y centos-release-scl-rh
-    subscription-manager repos --enable=rhel-server-rhscl-7-rpms
-    #sudo yum info git --available
-    sudo yum search rh-git
-    sudo yum install -y rh-git218-git
-    scl enable rh-git218-git bash
+    subscription-manager repos --enable=rhel-server-rhscl-7-rpms || true
+    sudo yum install -y rh-git218
+    scl enable rh-git218 bash || exit 1
     git --version
 
     yum -y install skopeo
@@ -58,6 +56,7 @@ installDeps(){
     yum install -y yum-utils device-mapper-persistent-data lvm2
     curl -sL https://rpm.nodesource.com/setup_10.x | bash -
     yum-config-manager --add-repo https://dl.yarnpkg.com/rpm/yarn.repo
+    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
     yum install -y docker-ce nodejs yarn gcc-c++ make jq hub
     yum install -y python3-pip wget yq podman
     yum install -y psmisc

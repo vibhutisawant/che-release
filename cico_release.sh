@@ -42,7 +42,7 @@ installDeps(){
     sudo yum -y remove git*
     sudo yum install -y centos-release-scl-rh
     subscription-manager repos --enable=rhel-server-rhscl-7-rpms || true
-    sudo yum install -y rh-git218
+    sudo yum install -y rh-git218 rh-git218-git-all rh-git218-runtime hub
     # enable rh-git218 for all users/bash shells
     echo "#!/bin/bash
 source scl_source enable rh-git218" > /etc/profile.d/enablerh-git218.sh && chmod +x /etc/profile.d/enablerh-git218.sh
@@ -58,7 +58,15 @@ source scl_source enable rh-git218" > /etc/profile.d/enablerh-git218.sh && chmod
     rpm -ql rh-git218-git
     echo "---"
     cat /opt/rh/rh-git218/enable
+    echo "---"
 
+    set -x
+    git --version 
+    scl enable rh-git218 bash -c git --version
+    echo "---"
+
+    sudo yum install -y https://repo.ius.io/ius-release-el7.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true
+    sudo yum install -y git
     git --version || exit 1
 
     yum -y install skopeo

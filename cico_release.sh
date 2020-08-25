@@ -48,8 +48,8 @@ installDeps(){
 source scl_source enable rh-git218" > /etc/profile.d/enablerh-git218.sh && chmod +x /etc/profile.d/enablerh-git218.sh
     # run the enablement script
     /etc/profile.d/enablerh-git218.sh
-    alias git='scl enable rh-git218 git' # alias approach?
-    ls -1R /opt/rh-git218*
+    alias git='scl enable rh-git218 bash -c git' # alias approach?
+    ls -1R /opt/rh-git218/
     echo "---"
     rpm -ql rh-git218
     echo "---"

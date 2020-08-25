@@ -49,7 +49,7 @@ source scl_source enable rh-git218" > /etc/profile.d/enablerh-git218.sh && chmod
     # run the enablement script
     /etc/profile.d/enablerh-git218.sh
     alias git='scl enable rh-git218 bash -c git' # alias approach?
-    ls -1R /opt/rh-git218/
+    ls -1R /etc/opt/rh/rh-git218/
     echo "---"
     rpm -ql rh-git218
     echo "---"
@@ -57,6 +57,7 @@ source scl_source enable rh-git218" > /etc/profile.d/enablerh-git218.sh && chmod
     echo "---"
     rpm -ql rh-git218-git
     echo "---"
+    cat /opt/rh/rh-git218/enable
 
     git --version || exit 1
 

@@ -48,8 +48,8 @@ installDeps(){
 source scl_source enable rh-git218" > /etc/profile.d/enablerh-git218.sh && chmod +x /etc/profile.d/enablerh-git218.sh
     # run the enablement script
     /etc/profile.d/enablerh-git218.sh
-    # alias git='scl enable rh-git218 git' # another approach?
-    git --version
+    alias git='scl enable rh-git218 git' # alias approach?
+    git --version || exit 1
 
     yum -y install skopeo
     yum -y install java-11-openjdk-devel

@@ -42,11 +42,10 @@ installDeps(){
     sudo yum -y remove git*
     sudo yum install -y centos-release-scl-rh
     subscription-manager repos --enable=rhel-server-rhscl-7-rpms
-    sudo yum install -y centos-release-scl-rh
-    sudo yum info git --available
-    sudo yum search git
-    sudo yum install -y git
-    #scl enable rh-git29 bash
+    #sudo yum info git --available
+    sudo yum search rh-git
+    sudo yum install -y rh-git218-git
+    scl enable rh-git218-git bash
     git --version
 
     yum -y install skopeo

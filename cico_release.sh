@@ -52,8 +52,8 @@ installDeps(){
     echo "BASH VERSION = $BASH_VERSION"
     sudo yum -y remove git*
 
-    sudo yum install centos-release-scl
-    sudo yum install rh-git29
+    sudo yum install -y centos-release-scl
+    sudo yum install -y rh-git29
     scl enable rh-git29 bash
 
     git --version

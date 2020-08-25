@@ -50,7 +50,10 @@ installDeps(){
     yum install -y python3-pip wget yq podman
     yum install -y psmisc
     echo "BASH VERSION = $BASH_VERSION"
-    sudo yum install -y https://centos7.iuscommunity.org/ius-release.rpm
+    sudo yum install -y \
+https://repo.ius.io/ius-release-el7.rpm \
+https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+
     sudo yum -y remove git*
     sudo yum -y install git2u-all
 

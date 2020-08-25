@@ -54,7 +54,7 @@ installDeps(){
 
     sudo yum install -y centos-release-scl-rh
     subscription-manager repos --enable=rhel-server-rhscl-7-rpms
-    sudo yum install -y rh-git29
+    sudo yum install -y https://cbs.centos.org/kojifiles/packages/rh-git29-git/2.9.3/8.el7/noarch/rh-git29-git-all-2.9.3-8.el7.noarch.rpm
     scl enable rh-git29 bash
 
     git --version

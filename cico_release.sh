@@ -516,7 +516,7 @@ releaseOperator() {
     echo "operator courier version"
     operator-courier --version
 
-    git checkout ${BRANCH}
+    git checkout ${BASEBRANCH}
     # TODO do not update nighlty OLM files for minor releases
     ./make-release.sh ${CHE_VERSION} --release --release-olm-files --update-nightly-olm-files
     # git checkout ${CHE_VERSION}

@@ -535,7 +535,7 @@ releaseOperator() {
     
     set +e # this is to rerun failed PR generation
     #./make-release.sh ${CHE_VERSION} --push-git-changes --pull-requests  
-    ./make-release.sh ${CHE_VERSION} --pull-requests  
+    bash +e ./make-release.sh ${CHE_VERSION} --pull-requests  
 }
 
 loadJenkinsVars

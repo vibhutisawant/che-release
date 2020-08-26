@@ -528,8 +528,8 @@ releaseOperator() {
     #git checkout ${BASEBRANCH}
     # TODO do not update nighlty OLM files for minor releases
     #./make-release.sh ${CHE_VERSION} --release --release-olm-files --update-nightly-olm-files
-    git checkout ${CHE_VERSION}
-    ./make-release.sh ${CHE_VERSION} --push-olm-files
+    # git checkout ${CHE_VERSION}
+    # ./make-release.sh ${CHE_VERSION} --push-olm-files
     git checkout ${BRANCH}
     git checkout ${CHE_VERSION}   
     

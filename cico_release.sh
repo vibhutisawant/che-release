@@ -535,6 +535,7 @@ releaseOperator() {
     
     set +e # this is to rerun failed PR generation
     #./make-release.sh ${CHE_VERSION} --push-git-changes --pull-requests  
+    sed -i -e '273d' make-release.sh
     bash +e ./make-release.sh ${CHE_VERSION} --pull-requests  
 }
 

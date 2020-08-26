@@ -12,7 +12,11 @@ loadJenkinsVars() {
                               CHE_OSS_SONATYPE_GPG_KEY \
                               CHE_OSS_SONATYPE_PASSPHRASE \
                               QUAY_ECLIPSE_CHE_USERNAME \
-                              QUAY_ECLIPSE_CHE_PASSWORD)"
+                              QUAY_ECLIPSE_CHE_PASSWORD \
+                              QUAY_ECLIPSE_CHE_OPERATOR_KUBERNETES_USERNAME \
+                              QUAY_ECLIPSE_CHE_OPERATOR_KUBERNETES_PASSWORD \
+                              QUAY_ECLIPSE_CHE_OPERATOR_OPENSHIFT_USERNAME \
+                              QUAY_ECLIPSE_CHE_OPERATOR_OPENSHIFT_PASSWORD)"
 }
 
 loadMvnSettingsGpgKey() {
@@ -494,6 +498,11 @@ releaseOperator() {
     export QUAY_USERNAME=$QUAY_ECLIPSE_CHE_USERNAME
     export QUAY_PASSWORD=$QUAY_ECLIPSE_CHE_PASSWORD
 
+    export QUAY_USERNAME_OS=$QUAY_ECLIPSE_CHE_OPERATOR_KUBERNETES_USERNAME
+    export QUAY_PASSWORD_OS=$QUAY_ECLIPSE_CHE_OPERATOR_KUBERNETES_PASSWORD
+    export QUAY_USERNAME_K8S=$QUAY_ECLIPSE_CHE_OPERATOR_OPENSHIFT_USERNAME
+    export QUAY_PASSWORD_K8S=$QUAY_ECLIPSE_CHE_OPERATOR_OPENSHIFT_PASSWORD
+
     export GIT_USER=mkuznyetsov
     export GIT_PASSWORD=none
 
@@ -516,13 +525,17 @@ releaseOperator() {
     echo "operator courier version"
     operator-courier --version
 
-    git checkout ${BASEBRANCH}
+    #git checkout ${BASEBRANCH}
     # TODO do not update nighlty OLM files for minor releases
-    ./make-release.sh ${CHE_VERSION} --release --release-olm-files --update-nightly-olm-files
-    # git checkout ${CHE_VERSION}
-    # ./make-release.sh ${CHE_VERSION} --push-olm-files
-     git checkout ${CHE_VERSION}   
-    ./make-release.sh ${CHE_VERSION} --push-git-changes --pull-requests  
+    #./make-release.sh ${CHE_VERSION} --release --release-olm-files --update-nightly-olm-files
+    git checkout ${CHE_VERSION}
+    ./make-release.sh ${CHE_VERSION} --push-olm-files
+    git checkout ${BRANCH}
+    git checkout ${CHE_VERSION}   
+    
+    set +e # this is to rerun failed PR generation
+    #./make-release.sh ${CHE_VERSION} --push-git-changes --pull-requests  
+    ./make-release.sh ${CHE_VERSION} --pull-requests  
 }
 
 loadJenkinsVars

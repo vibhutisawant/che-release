@@ -415,7 +415,7 @@ bumpVersion() {
     sed -i -e "s#<che.dashboard.version>.*<\/che.dashboard.version>#<che.dashboard.version>$1<\/che.dashboard.version>#" pom.xml
     sed -i -e "s#<che.version>.*<\/che.version>#<che.version>$1<\/che.version>#" pom.xml
     cd typescript-dto
-        sed -i -e "s#<che.version>.*<\/che.version>#<che.version>${1}<\/che.version>#" pom.xml
+        sed -i -e "s#<che.version>.*<\/che.version>#<che.version>${1}<\/che.version>#" dto-pom.xml
     cd ..
 
     commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
@@ -471,7 +471,7 @@ prepareRelease() {
     echo "[INFO] Dependencies updated in che-server parent"
 
     cd typescript-dto
-        sed -i -e "s#<che.version>.*<\/che.version>#<che.version>${CHE_VERSION}<\/che.version>#" pom.xml
+        sed -i -e "s#<che.version>.*<\/che.version>#<che.version>${CHE_VERSION}<\/che.version>#" dto-pom.xml
         echo "[INFO] Dependencies updated in che typescript DTO"
     cd ..
 

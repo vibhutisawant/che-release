@@ -537,11 +537,8 @@ releaseOperator() {
     # git checkout ${CHE_VERSION}
     # ./make-release.sh ${CHE_VERSION} --push-olm-files
     git checkout ${BRANCH}
-    git checkout ${CHE_VERSION}   
-    
-    set +e # this is to rerun failed PR generation
-    #./make-release.sh ${CHE_VERSION} --push-git-changes --pull-requests  
-    bash +e ./make-release.sh ${CHE_VERSION} --pull-requests  
+    git checkout ${CHE_VERSION}
+    ./make-release.sh ${CHE_VERSION} --push-git-changes --pull-requests  
 }
 
 loadJenkinsVars
@@ -599,4 +596,4 @@ bumpImagesInXbranch
 
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
 
-#releaseOperator
+releaseOperator

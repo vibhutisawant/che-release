@@ -594,7 +594,7 @@ loginQuay
 git clone git@github.com:eclipse/che.git
 cd che
 git checkout 7.18.1
-git revert 20c839843a9527699a84eb9f606e861c4a82a8d4
+git revert 20c839843a9527699a84eb9f606e861c4a82a8d4 -m "Revert \"CRW-1124 no need to set permissions twice, since the first change might make it impossible to make the second one if file is not owned by 'user' user\""
 cd ..
 
 # { ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;

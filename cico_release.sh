@@ -592,6 +592,7 @@ set -e
 loginQuay
 
 git clone git@github.com:eclipse/che.git
+cd che
 git checkout 7.18.1
 git revert 20c839843a9527699a84eb9f606e861c4a82a8d4
 cd ..

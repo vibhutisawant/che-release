@@ -195,6 +195,18 @@ releaseCheServer() {
     set +x
 }
 
+buildCheServer() {
+    set -x
+    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
+        cd che-parent
+        mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE   
+    fi
+    cd che
+    mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
+    set +x
+}
+
+
 # TODO ensure usage of respective bugfix branches
 checkoutProjects() {
     pwd
@@ -579,6 +591,11 @@ set -e
 
 loginQuay
 
+git clone git@github.com:eclipse/che.git
+git checkout 7.18.1
+git revert 20c839843a9527699a84eb9f606e861c4a82a8d4
+cd ..
+
 # { ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
 # { ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
 # waitForPids $pid_5 $pid_6
@@ -589,9 +606,10 @@ loginQuay
 
 # # releaseCheDocs &
 # releaseCheServer
-# buildImages  ${CHE_VERSION}
-# tagLatestImages ${CHE_VERSION}
-# pushImagesOnQuay ${CHE_VERSION} pushLatest
+buildCheServer
+buildImages  ${CHE_VERSION}
+tagLatestImages ${CHE_VERSION}
+pushImagesOnQuay ${CHE_VERSION} pushLatest
 # bumpVersions
 # bumpImagesInXbranch
 

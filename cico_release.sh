@@ -199,10 +199,12 @@ buildCheServer() {
     set -x
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
         cd che-parent
-        mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE   
+        mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE 
+        cd .. 
     fi
     cd che
     mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
+    cd ..
     set +x
 }
 

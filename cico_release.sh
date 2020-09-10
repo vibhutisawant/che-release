@@ -586,21 +586,26 @@ set -e
 # verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
 
 #release of che should start only when all necessary release images are available on Quay
-checkoutProjects
-prepareRelease
-createTags
+# checkoutProjects
+# prepareRelease
+# createTags
 
-loginQuay
+# loginQuay
 
-{ ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
-{ ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
-waitForPids $pid_5 $pid_6
-wait
+# { ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
+# { ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
+# waitForPids $pid_5 $pid_6
+# wait
 
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 5
 
-releaseCheDocs &
+git clone git@github.com:eclipse/che.git
+cd che
+git checkout 7.18.2
+cd ..
+
+#releaseCheDocs &
 releaseCheServer
 buildImages  ${CHE_VERSION}
 tagLatestImages ${CHE_VERSION}

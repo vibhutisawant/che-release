@@ -252,9 +252,9 @@ createTags() {
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
         tagAndCommit che-parent
     fi
-    tagAndCommit che-dashboard
-    tagAndCommit che-workspace-loader
-    tagAndCommit che
+    # tagAndCommit che-dashboard
+    # tagAndCommit che-workspace-loader
+    # tagAndCommit che
 }
 
 tagAndCommit() {
@@ -586,11 +586,12 @@ set -e
 # verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
 
 #release of che should start only when all necessary release images are available on Quay
-# checkoutProjects
-# prepareRelease
-# createTags
+checkoutProjects
+prepareRelease
+tagAndCommit che
+#createTags
 
-# loginQuay
+loginQuay
 
 # { ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
 # { ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
@@ -599,11 +600,6 @@ set -e
 
 # verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 5
 # verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 5
-
-git clone git@github.com:eclipse/che.git
-cd che
-git checkout 7.18.2
-cd ..
 
 #releaseCheDocs &
 releaseCheServer

@@ -601,7 +601,6 @@ set -e
 
 #release of che should start only when all necessary release images are available on Quay
 checkoutProjects
-checkoutTags
 prepareRelease
 createTags
 

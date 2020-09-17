@@ -202,7 +202,9 @@ releaseTypescriptDto() {
     sed -i dto-pom.xml -e "s/<version>7.19.0-SNAPSHOT<\/version>/<version>7.15.0<\/version>/g" \
     -e "s/maven-depmgt-pom/maven-parent-pom/g"
     sed -i build.sh -e "s/3.3-jdk-8/3.6.3-jdk-11/g"
+    set +e
     ./build.sh
+    set -e
     git checkout -- .
     cd ../..
 }
@@ -617,7 +619,7 @@ loginQuay
 # releaseCheDocs &
 # releaseCheServer
 buildCheServer
-releaseTypescriptDto
+#releaseTypescriptDto
 buildImages  ${CHE_VERSION}
 tagLatestImages ${CHE_VERSION}
 pushImagesOnQuay ${CHE_VERSION} pushLatest
@@ -626,5 +628,5 @@ bumpImagesInXbranch
 
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
 
-#releaseOperator
+releaseOperator
 

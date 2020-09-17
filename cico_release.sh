@@ -219,7 +219,6 @@ buildCheServer() {
 
 # TODO ensure usage of respective bugfix branches
 checkoutProjects() {
-    pwd
     checkoutProject git@github.com:eclipse/che-parent
     checkoutProject git@github.com:eclipse/che
     checkoutProject git@github.com:eclipse/che-dashboard
@@ -235,12 +234,14 @@ checkoutProject() {
     git checkout ${BASEBRANCH}
 
     set -x
+    set +e
     if [[ "${BASEBRANCH}" != "${BRANCH}" ]]; then
         git branch "${BRANCH}" || git checkout "${BRANCH}" && git pull origin "${BRANCH}"
         git push origin "${BRANCH}"
         git fetch origin "${BRANCH}:${BRANCH}"
         git checkout "${BRANCH}"
     fi
+    set -e
     set +x
     cd ..
 
@@ -456,7 +457,6 @@ bumpImagesInXbranch() {
 }
 
 prepareRelease() {
-
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
         cd che-parent
         #install previous version, in case it is not available in central repo
@@ -583,17 +583,17 @@ set -e
 #wait
 #then release plugin-registry (depends on che-theia and machine-exec)
 
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 5
 
- { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
-waitForPids $pid_4
-wait
+#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
+# waitForPids $pid_4
+# wait
 
-# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
 
 #release of che should start only when all necessary release images are available on Quay
 checkoutProjects

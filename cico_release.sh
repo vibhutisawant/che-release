@@ -199,7 +199,11 @@ releaseCheServer() {
 
 releaseTypescriptDto() {
     cd che/typescript-dto
+    sed -i dto-pom.xml -e "s/<version>7.19.0-SNAPSHOT<\/version>/<version>7.15.0<\/version>/g" \
+    -e "s/maven-depmgt-pom/maven-parent-pom/g"
+    sed -i build.sh -e "s/3.3-jdk-8/3.6.3-jdk-11/g"
     ./build.sh
+    git checkout -- .
     cd ../..
 }
 
@@ -261,9 +265,9 @@ createTags() {
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
         tagAndCommit che-parent
     fi
-    # tagAndCommit che-dashboard
-    # tagAndCommit che-workspace-loader
-    # tagAndCommit che
+    tagAndCommit che-dashboard
+    tagAndCommit che-workspace-loader
+    tagAndCommit che
 }
 
 tagAndCommit() {
@@ -593,25 +597,27 @@ set -e
 # waitForPids $pid_4
 # wait
 
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
 
 #release of che should start only when all necessary release images are available on Quay
 checkoutProjects
+checkoutTags
 prepareRelease
 createTags
 
 loginQuay
 
-{ ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
-{ ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
-waitForPids $pid_5 $pid_6
-wait
+# { ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
+# { ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
+# waitForPids $pid_5 $pid_6
+# wait
 
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 5
 
-releaseCheDocs &
-releaseCheServer
+# releaseCheDocs &
+# releaseCheServer
+buildCheServer
 releaseTypescriptDto
 buildImages  ${CHE_VERSION}
 tagLatestImages ${CHE_VERSION}

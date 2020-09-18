@@ -568,7 +568,7 @@ releaseOperator() {
     # git checkout ${CHE_VERSION}
     # ./make-release.sh ${CHE_VERSION} --push-olm-files
     git checkout ${BRANCH}
-    git checkout ${CHE_VERSION}
+    git checkout ${CHE_VERSION}-release
     ./make-release.sh ${CHE_VERSION} --push-git-changes --pull-requests  
 }
 

@@ -602,9 +602,9 @@ set -e
 # verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
 
 #release of che should start only when all necessary release images are available on Quay
-checkoutProjects
-prepareRelease
-createTags
+# checkoutProjects
+# prepareRelease
+# createTags
 
 loginQuay
 

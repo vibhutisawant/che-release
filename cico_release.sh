@@ -561,10 +561,10 @@ releaseOperator() {
     echo "operator courier version"
     operator-courier --version
 
-    #git checkout ${BASEBRANCH}
+    git checkout ${BASEBRANCH}
     # TODO do not update nighlty OLM files for minor releases
-    git checkout ${BRANCH}
-    ./make-release.sh ${CHE_VERSION} --release --release-olm-files
+    #git checkout ${BRANCH}
+    ./make-release.sh ${CHE_VERSION} --release --release-olm-files  --update-nightly-olm-files
     # git checkout ${CHE_VERSION}
     # ./make-release.sh ${CHE_VERSION} --push-olm-files
     git checkout ${BRANCH}
@@ -618,15 +618,14 @@ loginQuay
 
 # releaseCheDocs &
 # releaseCheServer
-buildCheServer
 #releaseTypescriptDto
-buildImages  ${CHE_VERSION}
-tagLatestImages ${CHE_VERSION}
-pushImagesOnQuay ${CHE_VERSION} pushLatest
-bumpVersions
-bumpImagesInXbranch
+# buildImages  ${CHE_VERSION}
+# tagLatestImages ${CHE_VERSION}
+# pushImagesOnQuay ${CHE_VERSION} pushLatest
+# bumpVersions
+# bumpImagesInXbranch
 
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
 
 releaseOperator
 

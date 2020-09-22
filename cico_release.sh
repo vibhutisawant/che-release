@@ -630,4 +630,3 @@ loginQuay
 # verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
 
 releaseOperator
-

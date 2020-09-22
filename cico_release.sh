@@ -570,6 +570,8 @@ releaseOperator() {
     git checkout ${BRANCH}
     git checkout ${CHE_VERSION}-release
     ./make-release.sh ${CHE_VERSION} --push-git-changes --pull-requests  
+    git checkout ${CHE_VERSION}-release
+    ./make-release.sh ${CHE_VERSION} --push-olm-files
 }
 
 loadJenkinsVars

@@ -620,7 +620,12 @@ set -e
 
 # releaseCheDocs &
 # releaseCheServer
-# #releaseTypescriptDto
+
+git clone git@github.com:eclipse/che.git
+cd che
+git checkout test-dto-build
+cd ..
+releaseTypescriptDto
 # buildImages  ${CHE_VERSION}
 # tagLatestImages ${CHE_VERSION}
 # pushImagesOnQuay ${CHE_VERSION} pushLatest
@@ -629,4 +634,4 @@ set -e
 
 # verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
 
-releaseOperator
+# releaseOperator

@@ -204,6 +204,7 @@ releaseTypescriptDto() {
     sed -i build.sh -e "s/3.3-jdk-8/3.6.3-jdk-11/g"
     set +e
     ./build.sh
+    cat ./index.d.ts
     set -e
     git checkout -- .
     cd ../..

@@ -199,12 +199,9 @@ releaseCheServer() {
 
 releaseTypescriptDto() {
     cd che/typescript-dto
-    sed -i dto-pom.xml -e "s/<version>7.19.0-SNAPSHOT<\/version>/<version>7.15.0<\/version>/g" \
-    -e "s/maven-depmgt-pom/maven-parent-pom/g"
     sed -i build.sh -e "s/3.3-jdk-8/3.6.3-jdk-11/g"
     set +e
     ./build.sh
-    cat ./index.d.ts
     set -e
     git checkout -- .
     cd ../..
@@ -502,7 +499,8 @@ prepareRelease() {
 
     cd typescript-dto
         sed -i -e "s#<che.version>.*<\/che.version>#<che.version>${CHE_VERSION}<\/che.version>#" dto-pom.xml
-        sed -i -e "s#<version>.*<\/version>#<version>${1}<\/version>#" dto-pom.xml
+        # do not change the version of the parent pom, which if fixed
+        sed -i -e "/<version>7.15.0<\/version>/ ! s#<version>.*<\/version>#<version>${CHE_VERSION}<\/version>#" dto-pom.xml
         echo "[INFO] Dependencies updated in che typescript DTO"
     cd ..
 
@@ -584,55 +582,51 @@ evaluateCheVariables
 
 set -e
 
-# #release che-theia, machine-exec and devfile-registry
-#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
-#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
-#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
-# waitForPids $pid_1 # $pid_2 $pid_3
-# wait
-# #then release plugin-registry (depends on che-theia and machine-exec)
+#release che-theia, machine-exec and devfile-registry
+ { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
+ { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
+ { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
+waitForPids $pid_1 # $pid_2 $pid_3
+wait
+#then release plugin-registry (depends on che-theia and machine-exec)
 
-# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 5
-# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 5
-# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 5
-# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 5
-# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 5
 
-#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
-# waitForPids $pid_4
-# wait
+ { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
+waitForPids $pid_4
+wait
 
-# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
 
-# #release of che should start only when all necessary release images are available on Quay
-# checkoutProjects
-# prepareRelease
-# createTags
+#release of che should start only when all necessary release images are available on Quay
+checkoutProjects
+prepareRelease
+createTags
 
-# loginQuay
+loginQuay
 
-# { ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
-# { ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
-# waitForPids $pid_5 $pid_6
-# wait
+{ ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
+{ ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
+waitForPids $pid_5 $pid_6
+wait
 
-# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 5
-# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 5
 
-# releaseCheDocs &
-# releaseCheServer
-
-git clone git@github.com:eclipse/che.git
-cd che
-git checkout test-dto-build
-cd ..
+releaseCheDocs &
+releaseCheServer
 releaseTypescriptDto
-# buildImages  ${CHE_VERSION}
-# tagLatestImages ${CHE_VERSION}
-# pushImagesOnQuay ${CHE_VERSION} pushLatest
-# bumpVersions
-# bumpImagesInXbranch
 
-# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
+buildImages  ${CHE_VERSION}
+tagLatestImages ${CHE_VERSION}
+pushImagesOnQuay ${CHE_VERSION} pushLatest
+bumpVersions
+bumpImagesInXbranch
 
-# releaseOperator
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
+
+releaseOperator

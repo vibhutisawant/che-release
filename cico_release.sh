@@ -572,8 +572,16 @@ releaseOperator() {
     # git checkout ${CHE_VERSION}-release
     # ./make-release.sh ${CHE_VERSION} --push-olm-files
 
-    git checkout 7.19.2-release
-    ./make-release.sh ${CHE_VERSION} --push-olm-files
+    AUTH_TOKEN=$(curl -sH "Content-Type: application/json" -XPOST https://quay.io/cnr/api/v1/users/login -d '
+{
+    "user": {
+        "username": "'"${QUAY_ECLIPSE_CHE_OPERATOR_KUBERNETES_USERNAME}"'",
+        "password": "'"${QUAY_ECLIPSE_CHE_OPERATOR_KUBERNETES_PASSWORD}"'"
+    }
+}')     
+    echo $AUTH_TOKEN
+    # git checkout 7.19.2-release
+    # ./make-release.sh ${CHE_VERSION} --push-olm-files
 
 }
 

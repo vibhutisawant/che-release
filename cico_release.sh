@@ -530,8 +530,8 @@ bumpVersions() {
 releaseOperator() {
     set +x
     set -e
-    export QUAY_USERNAME=$QUAY_ECLIPSE_CHE_USERNAME
-    export QUAY_PASSWORD=$QUAY_ECLIPSE_CHE_PASSWORD
+    #export QUAY_USERNAME=$QUAY_ECLIPSE_CHE_USERNAME
+    #export QUAY_PASSWORD=$QUAY_ECLIPSE_CHE_PASSWORD
 
     export QUAY_USERNAME_OS=$QUAY_ECLIPSE_CHE_OPERATOR_KUBERNETES_USERNAME
     export QUAY_PASSWORD_OS=$QUAY_ECLIPSE_CHE_OPERATOR_KUBERNETES_PASSWORD
@@ -560,17 +560,21 @@ releaseOperator() {
     echo "operator courier version"
     operator-courier --version
 
-    git checkout ${BASEBRANCH}
-    # TODO do not update nighlty OLM files for minor releases
-    #git checkout ${BRANCH}
-    ./make-release.sh ${CHE_VERSION} --release --release-olm-files
-    # git checkout ${CHE_VERSION}
+    # git checkout ${BASEBRANCH}
+    # # TODO do not update nighlty OLM files for minor releases
+    # #git checkout ${BRANCH}
+    # ./make-release.sh ${CHE_VERSION} --release --release-olm-files
+    # # git checkout ${CHE_VERSION}
+    # # ./make-release.sh ${CHE_VERSION} --push-olm-files
+    # git checkout ${BRANCH}
+    # git checkout ${CHE_VERSION}-release
+    # ./make-release.sh ${CHE_VERSION} --push-git-changes --pull-requests  
+    # git checkout ${CHE_VERSION}-release
     # ./make-release.sh ${CHE_VERSION} --push-olm-files
-    git checkout ${BRANCH}
-    git checkout ${CHE_VERSION}-release
-    ./make-release.sh ${CHE_VERSION} --push-git-changes --pull-requests  
-    git checkout ${CHE_VERSION}-release
+
+    git checkout 7.19.2-release
     ./make-release.sh ${CHE_VERSION} --push-olm-files
+
 }
 
 loadJenkinsVars
@@ -582,51 +586,51 @@ evaluateCheVariables
 
 set -e
 
-#release che-theia, machine-exec and devfile-registry
- { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
- { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
- { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
-waitForPids $pid_1 # $pid_2 $pid_3
-wait
-#then release plugin-registry (depends on che-theia and machine-exec)
+# #release che-theia, machine-exec and devfile-registry
+#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
+#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
+#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
+# waitForPids $pid_1 # $pid_2 $pid_3
+# wait
+# #then release plugin-registry (depends on che-theia and machine-exec)
 
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 5
 
- { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
-waitForPids $pid_4
-wait
+#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
+# waitForPids $pid_4
+# wait
 
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
 
-#release of che should start only when all necessary release images are available on Quay
-checkoutProjects
-prepareRelease
-createTags
+# #release of che should start only when all necessary release images are available on Quay
+# checkoutProjects
+# prepareRelease
+# createTags
 
-loginQuay
+# loginQuay
 
-{ ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
-{ ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
-waitForPids $pid_5 $pid_6
-wait
+# { ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
+# { ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
+# waitForPids $pid_5 $pid_6
+# wait
 
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 5
 
-releaseCheDocs &
-releaseCheServer
-releaseTypescriptDto
+# releaseCheDocs &
+# releaseCheServer
+# releaseTypescriptDto
 
-buildImages  ${CHE_VERSION}
-tagLatestImages ${CHE_VERSION}
-pushImagesOnQuay ${CHE_VERSION} pushLatest
-bumpVersions
-bumpImagesInXbranch
+# buildImages  ${CHE_VERSION}
+# tagLatestImages ${CHE_VERSION}
+# pushImagesOnQuay ${CHE_VERSION} pushLatest
+# bumpVersions
+# bumpImagesInXbranch
 
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
 
 releaseOperator

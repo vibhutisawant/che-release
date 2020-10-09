@@ -625,6 +625,7 @@ git checkout 7.20.0
 cd ..
 releaseCheServer
 
+
 buildImages  ${CHE_VERSION}
 tagLatestImages ${CHE_VERSION}
 pushImagesOnQuay ${CHE_VERSION} pushLatest

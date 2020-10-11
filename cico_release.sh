@@ -619,16 +619,24 @@ loginQuay
 # releaseCheServer
 #releaseTypescriptDto
 
+git clone git@github.com:eclipse/che-dashboard
+cd che-dashboard
+git checkout 7.20.x
+cd ..
+git clone git@github.com:eclipse/che-workspace-loader
+cd che-workspace-loader
+git checkout 7.20.x
+cd ..
 git clone git@github.com:eclipse/che
 cd che
-git checkout 7.20.0
+git checkout 7.20.x
 cd ..
-buildCheServer
+#buildCheServer
 
 
-buildImages  ${CHE_VERSION}
-tagLatestImages ${CHE_VERSION}
-pushImagesOnQuay ${CHE_VERSION} pushLatest
+# buildImages  ${CHE_VERSION}
+# tagLatestImages ${CHE_VERSION}
+# pushImagesOnQuay ${CHE_VERSION} pushLatest
 bumpVersions
 bumpImagesInXbranch
 

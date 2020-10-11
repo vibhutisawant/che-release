@@ -605,7 +605,7 @@ set -e
 # prepareRelease
 # createTags
 
-# loginQuay
+loginQuay
 
 # { ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
 # { ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
@@ -623,7 +623,7 @@ git clone git@github.com:eclipse/che
 cd che
 git checkout 7.20.0
 cd ..
-releaseCheServer
+buildCheServer
 
 
 buildImages  ${CHE_VERSION}
@@ -633,6 +633,5 @@ bumpVersions
 bumpImagesInXbranch
 
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
-
 
 releaseOperator

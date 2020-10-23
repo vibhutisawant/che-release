@@ -165,6 +165,10 @@ releaseCheDocs() {
     popd >/dev/null || exit 
 }
 
+releaseDashboard() {
+    curl https://api.github.com/repos/eclipse/che-dashboard/actions/workflows/release.yaml/dispatches -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d '{\"ref\":\"master\",\"inputs\": {\"version\":\"${7.20.0}\"} }'
+}
+
 releaseCheServer() {
     set -x
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
@@ -580,25 +584,25 @@ evaluateCheVariables
 
 set -e
 
-# #release che-theia, machine-exec and devfile-registry
-#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
-# #  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
-# #  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
-# waitForPids $pid_1 # $pid_2 $pid_3
-# wait
-# #then release plugin-registry (depends on che-theia and machine-exec)
+#release che-theia, machine-exec and devfile-registry
+ { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
+#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
+#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
+waitForPids $pid_1 # $pid_2 $pid_3
+wait
+#then release plugin-registry (depends on che-theia and machine-exec)
 
-# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 5
-# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 5
-# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 5
-# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 5
-# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 5
 
-#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
-# waitForPids $pid_4
-# wait
+ { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
+waitForPids $pid_4
+wait
 
-# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
 
 #release of che should start only when all necessary release images are available on Quay
 # checkoutProjects
@@ -618,28 +622,15 @@ loginQuay
 # releaseCheDocs &
 # releaseCheServer
 #releaseTypescriptDto
-
-git clone git@github.com:eclipse/che-dashboard
-cd che-dashboard
-git checkout 7.20.x
-cd ..
-git clone git@github.com:eclipse/che-workspace-loader
-cd che-workspace-loader
-git checkout 7.20.x
-cd ..
-git clone git@github.com:eclipse/che
-cd che
-git checkout 7.20.x
-cd ..
 #buildCheServer
 
 
 # buildImages  ${CHE_VERSION}
 # tagLatestImages ${CHE_VERSION}
 # pushImagesOnQuay ${CHE_VERSION} pushLatest
-bumpVersions
-bumpImagesInXbranch
+# bumpVersions
+# bumpImagesInXbranch
 
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
 
-releaseOperator
+# releaseOperator

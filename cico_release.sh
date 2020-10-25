@@ -114,26 +114,6 @@ evaluateCheVariables() {
     echo "Autorelease on nexus: ${AUTORELEASE_ON_NEXUS}"
 }
 
-releaseCheDashboard()
-{   
-    cd che-dashboard
-    containerURL="${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}"
-
-    docker build -t ${containerURL} -f apache.Dockerfile .
-    if [[ $? -ne 0 ]]; then
-        die_with  "docker build of ${containerURL} image is failed!"
-    fi
-
-    echo y | docker push ${containerURL}
-    if [[ $? -ne 0 ]]; then
-        die_with  "docker push of ${containerURL} image is failed!"
-    fi
-
-    verifyContainerExistsWithTimeout ${containerURL} 30
-
-    echo "[INFO] Workspace loader has been released"
-}
-
 releaseCheWorkspaceLoader()
 {
     set -x
@@ -166,7 +146,7 @@ releaseCheDocs() {
 }
 
 releaseDashboard() {
-    curl https://api.github.com/repos/eclipse/che-dashboard/actions/workflows/release.yaml/dispatches -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d '{\"ref\":\"master\",\"inputs\": {\"version\":\"${7.20.0}\"} }'
+    curl https://api.github.com/repos/eclipse/che-dashboard/actions/workflows/3152474/dispatches -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"version\":\"${CHE_VERSION}}\"} }"
 }
 
 releaseCheServer() {
@@ -269,7 +249,6 @@ createTags() {
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
         tagAndCommit che-parent
     fi
-    tagAndCommit che-dashboard
     tagAndCommit che-workspace-loader
     tagAndCommit che
 }
@@ -422,12 +401,6 @@ bumpVersion() {
         cd ..
     fi
 
-    cd che-dashboard
-    git checkout $2
-    npm --no-git-tag-version version ${1}
-    commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
-    cd ..
-
     cd che-workspace-loader
     git checkout $2
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
@@ -475,11 +448,6 @@ prepareRelease() {
         cd ..
     fi
     echo "[INFO] Che Parent version has been updated"
-    
-    cd che-dashboard
-    npm --no-git-tag-version version ${CHE_VERSION}
-    cd ..
-    echo "[INFO] Che Dashboard version has been updated"
 
     cd che-workspace-loader
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
@@ -592,26 +560,27 @@ set -e
 wait
 #then release plugin-registry (depends on che-theia and machine-exec)
 
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 5
 
- { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
-waitForPids $pid_4
-wait
+#  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
+# waitForPids $pid_4
+# wait
 
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
 
-#release of che should start only when all necessary release images are available on Quay
+releaseDashboard
+
+# release of che should start only when all necessary release images are available on Quay
 # checkoutProjects
 # prepareRelease
 # createTags
 
-loginQuay
+# loginQuay
 
-# { ./cico_release_dashboard_and_workspace_loader.sh "che-dashboard" "${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION}" 40 & }; pid_5=$!;
 # { ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
 # waitForPids $pid_5 $pid_6
 # wait
@@ -621,8 +590,8 @@ loginQuay
 
 # releaseCheDocs &
 # releaseCheServer
-#releaseTypescriptDto
-#buildCheServer
+# releaseTypescriptDto
+# buildCheServer
 
 
 # buildImages  ${CHE_VERSION}

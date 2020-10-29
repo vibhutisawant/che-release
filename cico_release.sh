@@ -570,11 +570,11 @@ set -e
 # waitForPids $pid_4
 # wait
 
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
 
-releaseDashboard
+# releaseDashboard
 
-release of che should start only when all necessary release images are available on Quay
+# release of che should start only when all necessary release images are available on Quay
 checkoutProjects
 prepareRelease
 createTags

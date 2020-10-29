@@ -575,30 +575,30 @@ set -e
 # releaseDashboard
 
 # release of che should start only when all necessary release images are available on Quay
-checkoutProjects
-prepareRelease
-createTags
+# checkoutProjects
+# prepareRelease
+# createTags
 
-loginQuay
+# loginQuay
 
-{ ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
-wait
+# { ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
+# wait
 
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 5
+# verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 5
 
-releaseCheDocs &
-releaseCheServer
-# releaseTypescriptDto
-buildCheServer
+# releaseCheDocs &
+# releaseCheServer
+# # releaseTypescriptDto
+# buildCheServer
 
 
-buildImages  ${CHE_VERSION}
-tagLatestImages ${CHE_VERSION}
-pushImagesOnQuay ${CHE_VERSION} pushLatest
-bumpVersions
-bumpImagesInXbranch
+# buildImages  ${CHE_VERSION}
+# tagLatestImages ${CHE_VERSION}
+# pushImagesOnQuay ${CHE_VERSION} pushLatest
+# bumpVersions
+# bumpImagesInXbranch
 
 # verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
 
-# releaseOperator
+releaseOperator

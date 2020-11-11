@@ -114,28 +114,6 @@ evaluateCheVariables() {
     echo "Autorelease on nexus: ${AUTORELEASE_ON_NEXUS}"
 }
 
-releaseCheWorkspaceLoader()
-{
-    set -x
-
-    cd che-workspace-loader
-    containerURL="${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}"
-
-    docker build -t ${containerURL} -f apache.Dockerfile .
-    if [[ $? -ne 0 ]]; then
-        die_with  "docker build of ${containerURL} image is failed!"
-    fi
-
-    echo y | docker push ${containerURL}
-    if [[ $? -ne 0 ]]; then
-        die_with  "docker push of ${containerURL} image is failed!"
-    fi
-
-    verifyContainerExistsWithTimeout ${containerURL} 30
-
-    echo "[INFO] Workspace loader has been released"
-}
-
 releaseCheDocs() {
     tmpdir="$(mktemp -d)"
     pushd "${tmpdir}" >/dev/null || exit
@@ -147,6 +125,10 @@ releaseCheDocs() {
 
 releaseDashboard() {
     curl https://api.github.com/repos/eclipse/che-dashboard/actions/workflows/3152474/dispatches -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"version\":\"${CHE_VERSION}\"} }"
+}
+
+releaseWorkspaceLoader() {
+    curl https://api.github.com/repos/eclipse/che-workspace-loader/actions/workflows/3543888/dispatches -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"version\":\"${CHE_VERSION}\"} }"
 }
 
 releaseCheServer() {
@@ -209,7 +191,6 @@ buildCheServer() {
 checkoutProjects() {
     checkoutProject git@github.com:eclipse/che-parent
     checkoutProject git@github.com:eclipse/che
-    checkoutProject git@github.com:eclipse/che-workspace-loader
 }
 
 checkoutProject() {
@@ -248,7 +229,6 @@ createTags() {
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
         tagAndCommit che-parent
     fi
-    tagAndCommit che-workspace-loader
     tagAndCommit che
 }
 
@@ -400,15 +380,6 @@ bumpVersion() {
         cd ..
     fi
 
-    cd che-workspace-loader
-    git checkout $2
-    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-        mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]
-    fi
-    mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1
-    commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
-    cd ..
-    
     cd che
     git checkout $2
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
@@ -447,14 +418,6 @@ prepareRelease() {
         cd ..
     fi
     echo "[INFO] Che Parent version has been updated"
-
-    cd che-workspace-loader
-    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-        mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]
-    fi
-    mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}
-    cd ..
-    echo "[INFO] Che Workspace Loader version has been updated"
 
     cd che
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
@@ -572,7 +535,9 @@ wait
 
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
 
+
 releaseDashboard
+releaseWorkspaceLoader
 
 # release of che should start only when all necessary release images are available on Quay
 checkoutProjects
@@ -581,11 +546,8 @@ createTags
 
 loginQuay
 
-{ ./cico_release_dashboard_and_workspace_loader.sh "che-workspace-loader" "${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION}" 20 & }; pid_6=$!;
-wait
-
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 30
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 30
 
 releaseCheDocs &
 releaseCheServer
@@ -599,4 +561,4 @@ updateImageTagsInCheServer
 
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
 
-releaseOperator
+# releaseOperator

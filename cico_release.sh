@@ -462,50 +462,7 @@ bumpVersions() {
 }
 
 releaseOperator() {
-    set +x
-    set -e
-
-    export QUAY_USERNAME_OS=$QUAY_ECLIPSE_CHE_OPERATOR_KUBERNETES_USERNAME
-    export QUAY_PASSWORD_OS=$QUAY_ECLIPSE_CHE_OPERATOR_KUBERNETES_PASSWORD
-    export QUAY_USERNAME_K8S=$QUAY_ECLIPSE_CHE_OPERATOR_OPENSHIFT_USERNAME
-    export QUAY_PASSWORD_K8S=$QUAY_ECLIPSE_CHE_OPERATOR_OPENSHIFT_PASSWORD
-
-    export GIT_USER=mkuznyetsov
-    export GIT_PASSWORD=none
-
-    #preinstall operator-courier and operator-sdk
-    pip3 install operator-courier==2.1.7
-    pip3 install yq
-
-    OP_SDK_DIR=/opt/operator-sdk
-    mkdir -p $OP_SDK_DIR
-    wget https://github.com/operator-framework/operator-sdk/releases/download/v0.10.0/operator-sdk-v0.10.0-x86_64-linux-gnu -O $OP_SDK_DIR/operator-sdk 
-    chmod +x $OP_SDK_DIR/operator-sdk
-
-    # copy base32 python-based helper script into dir that's accessed from PATH (so it's accessible to this and other called scripts) 
-    cp -f ${SCRIPT_DIR}/utils/base32 /usr/local/bin/ && chmod +x /usr/local/bin/base32
-    export PATH="$PATH:$OP_SDK_DIR"
-
-    git clone git@github.com:eclipse/che-operator.git
-    cd che-operator
-
-    echo "operator courier version"
-    operator-courier --version
-
-    git checkout ${BASEBRANCH}
-    if [[ ${CHE_VERSION} == *".0" ]]; then
-      ./make-release.sh ${CHE_VERSION} --release --release-olm-files --update-nightly-olm-files 
-    else
-      ./make-release.sh ${CHE_VERSION} --release --release-olm-files
-    fi
-
-    # DOESN'T WORK ON CENTOS CI, has to be done manually after PR generation
-    # git checkout ${CHE_VERSION}
-    # ./make-release.sh ${CHE_VERSION} --push-olm-files
-
-    git checkout ${BRANCH}
-    git checkout ${CHE_VERSION}-release
-    ./make-release.sh ${CHE_VERSION} --push-git-changes --pull-requests  
+    curl https://api.github.com/repos/eclipse/che-operator/actions/workflows/3593082/dispatches -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"version\":\"${CHE_VERSION}\"} }"
 }
 
 loadJenkinsVars
@@ -516,6 +473,8 @@ setupGitconfig
 evaluateCheVariables
 
 set -e
+
+loginQuay
 
 # #release che-theia, machine-exec and devfile-registry
  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
@@ -535,19 +494,16 @@ wait
 
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
 
-
 releaseDashboard
 releaseWorkspaceLoader
+
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 30
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 30
 
 # release of che should start only when all necessary release images are available on Quay
 checkoutProjects
 prepareRelease
 createTags
-
-loginQuay
-
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 30
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 30
 
 releaseCheDocs &
 releaseCheServer
@@ -561,4 +517,4 @@ updateImageTagsInCheServer
 
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
 
-# releaseOperator
+releaseOperator

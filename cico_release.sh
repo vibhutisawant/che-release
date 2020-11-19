@@ -47,30 +47,6 @@ installDeps(){
     sudo yum install -y centos-release-scl-rh
     subscription-manager repos --enable=rhel-server-rhscl-7-rpms || true
 
-    # update to git 2.18 via https://www.softwarecollections.org/en/scls/rhscl/rh-git218/
-#     sudo yum install -y rh-git218 rh-git218-git-all rh-git218-runtime hub
-#     # enable rh-git218 for all users/bash shells
-#     echo "#!/bin/bash
-# source scl_source enable rh-git218" > /etc/profile.d/enablerh-git218.sh && chmod +x /etc/profile.d/enablerh-git218.sh
-#     # run the enablement script
-#     /etc/profile.d/enablerh-git218.sh
-#     alias git='scl enable rh-git218 bash -c git' # alias approach?
-#     ls -1R /etc/opt/rh/rh-git218/
-#     echo "---"
-#     rpm -ql rh-git218
-#     echo "---"
-#     rpm -ql rh-git218-runtime
-#     echo "---"
-#     rpm -ql rh-git218-git
-#     echo "---"
-#     cat /opt/rh/rh-git218/enable
-#     echo "---"
-
-#     set -x
-#     git --version 
-#     scl enable rh-git218 bash -c git --version
-#     echo "---"
-
     # update to git 2.24 via https://repo.ius.io/7/x86_64/packages/g/
     sudo yum install -y https://repo.ius.io/ius-release-el7.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true
     sudo yum install -y git224-all
@@ -110,7 +86,7 @@ evaluateCheVariables() {
     fi
     echo "Basebranch: ${BASEBRANCH}" 
     echo "Release che-parent: ${RELEASE_CHE_PARENT}"
-
+    echo "Version che-parent: ${VERSION_CHE_PARENT}"
     echo "Autorelease on nexus: ${AUTORELEASE_ON_NEXUS}"
 }
 
@@ -283,16 +259,16 @@ buildImages() {
   
     # stop / rm all containers
     if [[ $(docker ps -aq) != "" ]];then
-        docker rm -f $(docker ps -aq)
+        docker rm -f "$(docker ps -aq)"
     fi
 
     # BUILD IMAGES
     for image_dir in ${DOCKER_FILES_LOCATIONS[@]}
       do
         if [[ ${image_dir} == "che/dockerfiles/che" ]]; then
-          bash $(pwd)/${image_dir}/build.sh --tag:${TAG} --build-arg:"CHE_DASHBOARD_VERSION=${CHE_VERSION},CHE_WORKSPACE_LOADER_VERSION=${CHE_VERSION}"  
+          bash "$(pwd)/${image_dir}/build.sh" --tag:${TAG} --build-arg:"CHE_DASHBOARD_VERSION=${CHE_VERSION},CHE_WORKSPACE_LOADER_VERSION=${CHE_VERSION}"  
         else
-          bash $(pwd)/${image_dir}/build.sh --tag:${TAG} 
+          bash "$(pwd)/${image_dir}/build.sh" --tag:${TAG} 
         fi
         if [[ $? -ne 0 ]]; then
            echo "ERROR:"
@@ -409,41 +385,42 @@ updateImageTagsInCheServer() {
 
 prepareRelease() {
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-        cd che-parent
-        #install previous version, in case it is not available in central repo
-        #which is needed for dependent projects
-        mvn clean install
-        mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}
-        mvn clean install
-        cd ..
+        pushd che-parent >/dev/null
+            # Install previous version, in case it is not available in central repo
+            # which is needed for dependent projects
+            mvn clean install
+            mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}
+            mvn clean install
+        popd >/dev/null
     fi
     echo "[INFO] Che Parent version has been updated"
 
-    cd che
-    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-        mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]
-    fi
-    mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}
-    echo "[INFO] Che Server version has been updated"
+    pushd che >/dev/null
+        if [[ $RELEASE_CHE_PARENT = "true" ]]; then
+            mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]
+        fi
+        mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}
+        echo "[INFO] Che Server version has been updated"
 
-    # Replace dependencies in che-server parent
-    sed -i -e "s#<che.dashboard.version>.*<\/che.dashboard.version>#<che.dashboard.version>${CHE_VERSION}<\/che.dashboard.version>#" pom.xml
-    sed -i -e "s#<che.version>.*<\/che.version>#<che.version>${CHE_VERSION}<\/che.version>#" pom.xml
-    echo "[INFO] Dependencies updated in che-server parent"
+        # Replace dependencies in che-server parent
+        sed -i -e "s#<che.dashboard.version>.*<\/che.dashboard.version>#<che.dashboard.version>${CHE_VERSION}<\/che.dashboard.version>#" pom.xml
+        sed -i -e "s#<che.version>.*<\/che.version>#<che.version>${CHE_VERSION}<\/che.version>#" pom.xml
+        echo "[INFO] Dependencies updated in che-server parent"
 
-    cd typescript-dto
-        sed -i -e "s#<che.version>.*<\/che.version>#<che.version>${CHE_VERSION}<\/che.version>#" dto-pom.xml
-        # do not change the version of the parent pom, which if fixed
-        sed -i -e "/<version>7.15.0<\/version>/ ! s#<version>.*<\/version>#<version>${CHE_VERSION}<\/version>#" dto-pom.xml
-        echo "[INFO] Dependencies updated in che typescript DTO"
-    cd ..
+        # TODO pull parent pom version from VERSION file, instead of being hardcoded
+        pushd typescript-dto >/dev/null
+            sed -i -e "s#<che.version>.*<\/che.version>#<che.version>${CHE_VERSION}<\/che.version>#" dto-pom.xml
+            # Do not change the version of the parent pom, which if fixed
+            sed -i -e "/<version>${VERSION_CHE_PARENT}<\/version>/ ! s#<version>.*<\/version>#<version>${CHE_VERSION}<\/version>#" dto-pom.xml
+            echo "[INFO] Dependencies updated in che typescript DTO"
+        popd >/dev/null
 
-    # TODO more elegant way to execute these scripts
-    cd .ci
-    ./set_tag_version_images_linux.sh ${CHE_VERSION}
-    echo "[INFO] Tag versions of images have been set in che-server"
-
-    cd ../..
+        # TODO more elegant way to execute these scripts
+        pushd .ci >/dev/null
+            ./set_tag_version_images_linux.sh ${CHE_VERSION}
+            echo "[INFO] Tag versions of images have been set in che-server"
+        popd >/dev/null
+    popd >/dev/null
 }
 
 bumpVersions() {
@@ -476,36 +453,37 @@ set -e
 
 loginQuay
 
-# #release che-theia, machine-exec and devfile-registry
+# Release che-theia, machine-exec and devfile-registry
  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
  { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
 wait
-# # then release plugin-registry (depends on che-theia and machine-exec)
-
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 5
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 5
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 5
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 5
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 5
 
- { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
+# Release plugin-registry (depends on che-theia and machine-exec)
+{ ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
 wait
-
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
 
+# Release dashboard and workspace loader
 releaseDashboard
 releaseWorkspaceLoader
-
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 30
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 30
 
-# release of che should start only when all necessary release images are available on Quay
+# release of che should start only when all necessary release images are available on Quay (depends on dashboard and workspace loader)
 checkoutProjects
 prepareRelease
 createTags
 
+# Release of Che docs does not depend on server, so trigger it and don't wait
 releaseCheDocs &
+
+# Release Che server (depends on dashboard and workspace loader)
 releaseCheServer
 
 buildImages  ${CHE_VERSION}
@@ -517,4 +495,5 @@ updateImageTagsInCheServer
 
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
 
+# finally, release Che operator
 releaseOperator

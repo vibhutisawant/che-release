@@ -32,19 +32,31 @@ Note that over time, this job, and all the jobs called by it, will be migrated t
 1. When che-operator PRs are created, manually do this step:
 ```
     export QUAY_ECLIPSE_CHE_USERNAME=[your quay user]
-    export QUAY_ECLIPSE_CHE_PASSWORD=[your quay user]
+    export QUAY_ECLIPSE_CHE_PASSWORD=[your quay password or token]
 
     # DOESN'T WORK ON CENTOS CI, has to be done manually after PR generation
-    # git checkout ${CHE_VERSION}
-    # ./make-release.sh ${CHE_VERSION} --push-olm-files
+    CHE_VERSION=7.22.0
+
+    pushd /tmp >/dev/null
+      git clone git@github.com:eclipse/che-operator.git || true
+      pushd che-operator >/dev/null
+        # check out the correct che-operator branch
+        git checkout ${CHE_VERSION}-release 
+
+        # push the olm files
+        ./make-release.sh ${CHE_VERSION} --push-olm-files
+      popd >/dev/null
+    popd >/dev/null
+    rm -fr /tmp/che-operator
     
     # Note: this should be moved to GH action so it can happen more easily
 ```
 (if this fails, check permissions above)
 
-2. Manually re-trigger PR checks on 2 `che-operator` PRs (one for master, one for .x branch), eg.,
-    * https://github.com/eclipse/che-operator/pull/517
-    * https://github.com/eclipse/che-operator/pull/518
+2. Manually re-trigger PR checks on 2 `che-operator` PRs (one for master, one for .x branch), eg., for 7.22.0, find PRs using query: https://github.com/eclipse/che-operator/pulls?q=is%3Apr+is%3Aopen+7.22.0
+    * https://github.com/eclipse/che-operator/pull/548
+    * https://github.com/eclipse/che-operator/pull/549
+    
     If anything goes wrong, check with Anatolii or Flavius for manual checks / failure overrides
 
 1. Push operator PRs when checks have completed and they're approved 

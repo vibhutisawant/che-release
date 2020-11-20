@@ -63,7 +63,7 @@ Note that over time, this job, and all the jobs called by it, will be migrated t
     * https://github.com/eclipse/che-operator/pull/549
     
     * TODO: via GH API, send "/retest" to the PRs to retrigger the prow jobs.
-    * TODO: figure out how to retrigger the other tests automatically
+    * TODO: figure out how to retrigger the other 'minikube' 'update' tests automatically (2 per PR)
 
     If anything goes wrong, check with Anatolii or Flavius for manual checks / failure overrides
 

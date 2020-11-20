@@ -29,7 +29,7 @@ Note that over time, this job, and all the jobs called by it, will be migrated t
 
 ## Phase 2 - manual steps
 
-1. When che-operator PRs are created, manually do this step:
+1. When che-operator PRs are created, manually do this step to create new CSVs so that update tests will succeed on the che-operator PRs:
 ```
     export QUAY_ECLIPSE_CHE_USERNAME=[your quay user]
     export QUAY_ECLIPSE_CHE_PASSWORD=[your quay password or token]

@@ -29,6 +29,10 @@ Note that over time, this job, and all the jobs called by it, will be migrated t
 
 ## Phase 2 - manual steps
 
+### che-operator
+
+    NOTE: this step will not be required once the che-operator release can push the CSV/OLM files automatically. See https://github.com/eclipse/che/issues/18393
+
 1. When che-operator PRs are created, manually do this step to create new CSVs so that update tests will succeed on the che-operator PRs:
 ```
     export QUAY_ECLIPSE_CHE_USERNAME=[your quay user]
@@ -53,21 +57,30 @@ Note that over time, this job, and all the jobs called by it, will be migrated t
 ```
 (if this fails, check permissions above)
 
+
 2. Manually re-trigger PR checks on 2 `che-operator` PRs (one for master, one for .x branch), eg., for 7.22.0, find PRs using query: https://github.com/eclipse/che-operator/pulls?q=is%3Apr+is%3Aopen+7.22.0
     * https://github.com/eclipse/che-operator/pull/548
     * https://github.com/eclipse/che-operator/pull/549
     
+    * TODO: via GH API, send "/retest" to the PRs to retrigger the prow jobs.
+    * TODO: figure out how to retrigger the other tests automatically
+
     If anything goes wrong, check with Anatolii or Flavius for manual checks / failure overrides
 
 1. Push operator PRs when checks have completed and they're approved 
 
-1. export GH token to use with next step (creating PRs w/ `hub`)
 
-1. Manually run https://github.com/che-incubator/chectl `make-release.sh` script; watch for update to https://github.com/che-incubator/chectl/releases  
+### chectl
+
+1. export your GH token to use with next step (creating PRs w/ `hub`)
+
+1. Manually run https://github.com/che-incubator/chectl `make-release.sh` script; watch for update to https://github.com/che-incubator/chectl/releases
 
 1. Push chectl PRs when approved
     * eg., https://github.com/che-incubator/chectl/pull/975
 
+
+### community operators
 
 1. Prepare for creation of community operator PRs via script in https://github.com/eclipse/che-operator (ONLY after ALL PRs are merged):
     `./olm/prepare-community-operators-update.sh`

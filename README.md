@@ -89,6 +89,10 @@ Note that over time, this job, and all the jobs called by it, will be migrated t
 
     * If script fails, check permissions above
 
+    * TODO: remove these manual steps when the following PRs are merged:
+        * https://github.com/eclipse/che-operator/pull/559
+        * https://github.com/eclipse/che-operator/pull/558
+
     * If successful, you'll links to create pull requests:
         ```
         remote: Create a pull request for 'update-eclipse-che-upstream-operator-7.22.1' on GitHub by visiting:
@@ -104,12 +108,16 @@ Note that over time, this job, and all the jobs called by it, will be migrated t
 
 1. Using the PR template, check all the checkboxes, but remove this section:
 
-        ```
         ### New Submissions
         * [ ] Does your operator have [nested directory structure](https://github.com/operator-framework/community-operators/blob/master/docs/contributing.md#create-a-bundle)?
         ...
         * [ ] Is your submission [signed](https://github.com/operator-framework/community-operators/blob/master/docs/contributing.md#sign-your-work)?
-        ```
+
+1. Rather than a manual step, can create the PR body like this, removing the 'New Submissions' section and checking all the boxes:
+    ```
+    curl -sSLo - https://raw.githubusercontent.com/operator-framework/community-operators/master/docs/pull_request_template.md | \
+    sed -r -n '/#+ Updates to existing Operators/,$p' | sed -r -e "s#\[\ \]#[x]#g"
+    ```
 
 1. Once created you'll see our PRs here:
     * https://github.com/operator-framework/community-operators/pulls?q=%22Update+eclipse-che+operator%22+is%3Aopen

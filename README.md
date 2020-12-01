@@ -79,39 +79,48 @@ Note that over time, this job, and all the jobs called by it, will be migrated t
 1. Push chectl PRs when approved
     * eg., https://github.com/che-incubator/chectl/pull/975
 
+* TODO: should we be creating a "release" before we've merged the chectl PR? Surely the GH "release" should FOLLOW the PR merge?
 
 ### community operators
 
-1. Prepare for creation of community operator PRs via script in https://github.com/eclipse/che-operator (ONLY after ALL PRs are merged):
-    `./olm/prepare-community-operators-update.sh`
+1. Prepare for creation of community operator PRs via script in https://github.com/eclipse/che-operator (*ONLY after ALL PRs* for che-operator and chectl are merged):
 
-    * (if this fails, check permissions above)
+        ./olm/prepare-community-operators-update.sh
 
-8. Create PRs using template https://github.com/operator-framework/community-operators/blob/master/docs/pull_request_template.md
-    * https://github.com/operator-framework/community-operators/pulls?q=7.21.0
-    * https://github.com/operator-framework/community-operators/pulls?q=%22Update+eclipse-che+operator%22
+    * If script fails, check permissions above
 
-    * When you run the community operator update script, you'll see in the output links like these after branch is pushed
+    * If successful, you'll links to create pull requests:
         ```
-        remote: Create a pull request for 'update-eclipse-che-operator-7.21.1' on GitHub by visiting:
-        remote:      https://github.com/che-incubator/community-operators/pull/new/update-eclipse-che-operator-7.21.1
+        remote: Create a pull request for 'update-eclipse-che-upstream-operator-7.22.1' on GitHub by visiting:
+
+        and
+
+        remote: Create a pull request for 'update-eclipse-che-operator-7.22.1' on GitHub by visiting:
         ```
-        Then in the PR template, check all the checkboxes, but remove this section:
+
+1. Click the `/pull/new/` links to open GH, then create PRs using [template](https://github.com/operator-framework/community-operators/blob/master/docs/pull_request_template.md), which is subject to change.
+    * https://github.com/che-incubator/community-operators/pull/new/update-eclipse-che-upstream-operator-7.22.1
+    * https://github.com/che-incubator/community-operators/pull/new/update-eclipse-che-operator-7.22.1
+
+1. Using the PR template, check all the checkboxes, but remove this section:
+
         ```
         ### New Submissions
         * [ ] Does your operator have [nested directory structure](https://github.com/operator-framework/community-operators/blob/master/docs/contributing.md#create-a-bundle)?
-        * [ ] Have you selected the Project *Community Operator Submissions* in your PR on the right-hand menu bar?
-        * [ ] Are you familiar with our [contribution guidelines](https://github.com/operator-framework/community-operators/blob/master/docs/contributing.md)?
-        * [ ] Have you [packaged and deployed](https://github.com/operator-framework/community-operators/blob/master/docs/testing-operators.md) your Operator for Operator Framework?
-        * [ ] Have you tested your Operator with all Custom Resource Definitions?
-        * [ ] Have you tested your Operator in all supported [installation modes](https://github.com/operator-framework/operator-lifecycle-manager/blob/master/doc/design/building-your-csv.md#operator-metadata)?
+        ...
         * [ ] Is your submission [signed](https://github.com/operator-framework/community-operators/blob/master/docs/contributing.md#sign-your-work)?
         ```
 
-        Then comment in the issue; it will be closed after community update PRs are merged https://github.com/eclipse/che/issues/18296
-        
-        If tests fail or community operator PRs get stalled:
+1. Once created you'll see our PRs here:
+    * https://github.com/operator-framework/community-operators/pulls?q=%22Update+eclipse-che+operator%22+is%3Aopen
+
+1. If tests fail or community operator PRs get stalled:
             * Ping @j0zi (Jozef Breza) or @mavala (Martin Vala)
+
+1. After creating the PRs, add a link to the new PRs from the release issue, eg.,
+    * https://github.com/eclipse/che/issues/18468 -> 
+    * https://github.com/operator-framework/community-operators/pulls?q=is%3Apr+7.22.1
+    
 
 --------------
 
@@ -120,12 +129,12 @@ Note that over time, this job, and all the jobs called by it, will be migrated t
 
 * VERSION file - should we add a test to verify we're not trying to re-release an existing release w/o an explicit override?
 
-* add step to delete existing tag if exists and need to re-run a step (eg., broken theia needs a re-release of `:7.20.1`)
+* add step to delete existing tag if exists and need to re-run a step (eg., broken theia needs a re-release of `:7.22.1`)
 
 * `releaseCheServer` vs. `buildCheServer` - use boolean param vs. having to rememeber to toggle two different method names
 
 * `./make-release.sh --push-olm-files` has to be run separately, then PR checks retriggered (maybe this will go away when we move to GH action).
 
-* can run `make-release.sh` for chectl before operator PRs are merged? 
+* can run `make-release.sh` for chectl before operator PRs are merged? does it make sense to create the GH release BEFORE we run the make-release script?
 
 * add notification (email? UMB? slack?) when che-release job is done?

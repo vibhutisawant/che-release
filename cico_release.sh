@@ -12,6 +12,8 @@ loadJenkinsVars() {
                               CHE_NPM_AUTH_TOKEN \
                               CHE_OSS_SONATYPE_GPG_KEY \
                               CHE_OSS_SONATYPE_PASSPHRASE \
+                              RH_CHE_AUTOMATION_DOCKERHUB_USERNAME \
+                              RH_CHE_AUTOMATION_DOCKERHUB_PASSWORD \
                               QUAY_ECLIPSE_CHE_USERNAME \
                               QUAY_ECLIPSE_CHE_PASSWORD \
                               QUAY_ECLIPSE_CHE_OPERATOR_KUBERNETES_USERNAME \
@@ -46,6 +48,30 @@ installDeps(){
     sudo yum -y remove git*
     sudo yum install -y centos-release-scl-rh
     subscription-manager repos --enable=rhel-server-rhscl-7-rpms || true
+
+    # update to git 2.18 via https://www.softwarecollections.org/en/scls/rhscl/rh-git218/
+#     sudo yum install -y rh-git218 rh-git218-git-all rh-git218-runtime hub
+#     # enable rh-git218 for all users/bash shells
+#     echo "#!/bin/bash
+# source scl_source enable rh-git218" > /etc/profile.d/enablerh-git218.sh && chmod +x /etc/profile.d/enablerh-git218.sh
+#     # run the enablement script
+#     /etc/profile.d/enablerh-git218.sh
+#     alias git='scl enable rh-git218 bash -c git' # alias approach?
+#     ls -1R /etc/opt/rh/rh-git218/
+#     echo "---"
+#     rpm -ql rh-git218
+#     echo "---"
+#     rpm -ql rh-git218-runtime
+#     echo "---"
+#     rpm -ql rh-git218-git
+#     echo "---"
+#     cat /opt/rh/rh-git218/enable
+#     echo "---"
+
+#     set -x
+#     git --version 
+#     scl enable rh-git218 bash -c git --version
+#     echo "---"
 
     # update to git 2.24 via https://repo.ius.io/7/x86_64/packages/g/
     sudo yum install -y https://repo.ius.io/ius-release-el7.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true
@@ -295,6 +321,12 @@ loginQuay() {
         echo "Could not login, missing credentials for pushing to the '${ORGANIZATION}' organization"
         die_with  "failed to login on Quay!"
     fi
+
+    if [ -n "${RH_CHE_AUTOMATION_DOCKERHUB_USERNAME}" ] && [ -n "${RH_CHE_AUTOMATION_DOCKERHUB_PASSWORD}" ]; then
+        docker login -u "${RH_CHE_AUTOMATION_DOCKERHUB_USERNAME}" -p "${RH_CHE_AUTOMATION_DOCKERHUB_PASSWORD}"
+    else
+        echo "Could not login, missing credentials for pushing to the docker.io"
+    fi
 }
 
 pushImagesOnQuay() {
@@ -454,20 +486,20 @@ set -e
 loginQuay
 
 # Release che-theia, machine-exec and devfile-registry
- { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
- { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
- { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
+{ ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
+{ ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
+{ ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
 wait
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 5
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 30
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 30
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 30
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 30
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 30
 
 # Release plugin-registry (depends on che-theia and machine-exec)
 { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
 wait
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 5
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 30
 
 # Release dashboard and workspace loader
 releaseDashboard
@@ -495,5 +527,5 @@ updateImageTagsInCheServer
 
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-server:${CHE_VERSION} 5
 
-# finally, release Che operator
+# finally, release Che operator (create PRs)
 releaseOperator

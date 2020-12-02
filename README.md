@@ -19,7 +19,7 @@ Note that over time, this job, and all the jobs called by it, will be migrated t
 
 ## Phase 1 - automated build steps
 
-1. Create new release issue to collect blocker issues (if any)
+1. [Create new release issue to report status and collect any blocking issues](https://github.com/eclipse/che/issues/new?assignees=&labels=kind%2Frelease&template=release.md&title=Release+Che+7.FIXME)
 1. Update `VERSION` file in che-release repo's release branch
 1. Check `cico_release.sh` script is properly set up (no important steps commented out from previous partial run)
 1. Push commit to `release` branch (with `-f` force if needed)

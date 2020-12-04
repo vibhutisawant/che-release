@@ -32,7 +32,7 @@ Note that over time, this job, and all the jobs called by it, will be migrated t
 
 ### che-operator
 
-    NOTE: this step will not be required once the che-operator release can push the CSV/OLM files automatically. See https://github.com/eclipse/che/issues/18393
+TODO: verify that these 3 steps are no longer needed as of 7.23.0 release. See https://github.com/eclipse/che/issues/18393
 
 1. When che-operator PRs are created, manually do this step to create new CSVs so that update tests will succeed on the che-operator PRs:
 ```
@@ -57,7 +57,6 @@ Note that over time, this job, and all the jobs called by it, will be migrated t
     # TODO: move this into the che-operator "release" GH action so it can happen more automatically as part of the che-release script
 ```
 (if this fails, check permissions above)
-
 
 2. Manually re-trigger PR checks on 2 `che-operator` PRs (one for master, one for .x branch), eg., for 7.22.0, find PRs using query: https://github.com/eclipse/che-operator/pulls?q=is%3Apr+is%3Aopen+7.22.2
     * https://github.com/eclipse/che-operator/pull/562
@@ -94,7 +93,7 @@ This depends on the che-operator PRs being merged.
 
 ### chectl
 
-This depends on the che-operator PRs being merged. (Also on the community PRs?)
+This depends on the che-operator PRs being merged, as well as the community PRs. 
 
 1. Run this action: https://github.com/che-incubator/chectl/actions?query=workflow%3A%22Release+chectl%22
 
@@ -104,19 +103,13 @@ This depends on the che-operator PRs being merged. (Also on the community PRs?)
 
 * TODO: should we be creating a "release" before we've merged the chectl PR? Surely the GH "release" should FOLLOW the PR merge?
 
-
 --------------
-
 
 # Che release gotchas
 
 * VERSION file - should we add a test to verify we're not trying to re-release an existing release w/o an explicit override?
 
 * add step to delete existing tag if exists and need to re-run a step (eg., broken theia needs a re-release of `:7.22.1`)
-
-* `releaseCheServer` vs. `buildCheServer` - use boolean param vs. having to rememeber to toggle two different method names
-
-* `./make-release.sh --push-olm-files` has to be run separately, then PR checks retriggered (maybe this will go away when we move to GH action).
 
 * can run `make-release.sh` for chectl before operator PRs are merged? does it make sense to create the GH release BEFORE we run the make-release script?
 

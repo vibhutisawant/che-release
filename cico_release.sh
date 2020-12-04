@@ -113,6 +113,7 @@ evaluateCheVariables() {
     echo "Basebranch: ${BASEBRANCH}" 
     echo "Release che-parent: ${RELEASE_CHE_PARENT}"
     echo "Version che-parent: ${VERSION_CHE_PARENT}"
+    echo "Deploy to nexus: ${DEPLOY_TO_NEXUS}"
     echo "Autorelease on nexus: ${AUTORELEASE_ON_NEXUS}"
     echo "Release Process Phases: '${PHASES}'"
 }
@@ -139,33 +140,41 @@ releaseWorkspaceLoader() {
 releaseCheServer() {
     set -x
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-        cd che-parent
+        pushd che-parent >/dev/null
         mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
 
         if [ $? -eq 0 ]; then
-            echo 'Build Success!'
-            echo 'Going to deploy artifacts'
-            mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DautoReleaseAfterClose=$AUTORELEASE_ON_NEXUS -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
-            cd ..
+            echo 'Build of che-parent: Success!'
+            if [[ ${DEPLOY_TO_NEXUS} == "true" ]]; then
+                echo 'Deploy che-parent artifacts to nexus'
+                mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DautoReleaseAfterClose=$AUTORELEASE_ON_NEXUS -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
+            else
+                echo "[WARN] No deployment to Nexus as DEPLOY_TO_NEXUS = ${DEPLOY_TO_NEXUS}"
+            fi
         else
-            echo 'Build Failed!'
+            echo '[ERROR] Build of che-parent: Failed!'
             exit 1
-        fi        
+        fi
+        popd >/dev/null
     fi
 
-    cd che
+    pushd che >/dev/null
     mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
 
     if [ $? -eq 0 ]; then
-        echo 'Build Success!'
-        echo 'Going to deploy artifacts'
-        mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DautoReleaseAfterClose=$AUTORELEASE_ON_NEXUS -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
-        cd ..
+        echo 'Build of che-server: Success!'
+        if [[ ${DEPLOY_TO_NEXUS} == "true" ]]; then
+            echo 'Deploy che-server artifacts to nexus'
+            mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DautoReleaseAfterClose=$AUTORELEASE_ON_NEXUS -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
+        else
+            echo "[WARN] No deployment to Nexus as DEPLOY_TO_NEXUS = ${DEPLOY_TO_NEXUS}"
+        fi
     else
-        echo 'Build Failed!'
+        echo '[ERROR] Build of che-server: Failed!'
         exit 1
     fi
     set +x
+    popd >/dev/null
 }
 
 releaseTypescriptDto() {
@@ -177,20 +186,6 @@ releaseTypescriptDto() {
     git checkout -- .
     cd ../..
 }
-
-buildCheServer() {
-    set -x
-    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-        cd che-parent
-        mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE 
-        cd .. 
-    fi
-    cd che
-    mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
-    cd ..
-    set +x
-}
-
 
 # TODO ensure usage of respective bugfix branches
 checkoutProjects() {

@@ -1,0 +1,66 @@
+# This Workflow performs a full release of Che
+name: Overall Che Release Orchestrator
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The version that is going to be released. Should be in format 7.y.z'
+        required: true
+        default: '7.y.z'
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+        with: 
+          fetch-depth: 0
+      - name: Set up Python 3.6
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.6
+      - name: Set up environment
+        run: |
+          python -m pip install --upgrade pip
+          pip install yq
+          python --version
+          pip --version
+          yq --version
+
+          # install more repos
+          sudo add-apt-repository -y ppa:openjdk-r/ppa || true # for jdk11
+          sudo add-apt-repository -y ppa:cpick/hub || true # for hub
+          sudo apt-get update -y || true
+
+          # install more dependencies
+          sudo apt-get -y wget curl bash hub openjdk-11-jdk-headless git skopeo podman 
+
+          java -version
+
+          # want git >=2.24, hub >2
+          git version
+          hub --version
+
+          # want >=5
+          bash --version
+
+          # want >=1.1
+          skopeo --version
+          # want >=2 
+          podman --version
+
+          # do we need all these?
+          # docker-ce          x86_64  3:19.03.14-3.el7            docker-ce-stable   24 M
+          # gcc-c++            x86_64  4.8.5-44.el7                base              7.2 M
+          # bash >=5
+          # nodejs             x86_64  2:10.23.0-1nodesource       nodesource         20 M
+          # yarn               noarch  1.22.5-1                    yarn              1.2 M
+      - name: Release
+        run: |
+          CHE_VERSION=${{ github.event.inputs.version }}
+          echo "CHE_VERSION=${CHE_VERSION}"
+          sed -i VERSION -r -e "s#CHE_VERSION=.*#CHE_VERSION=${CHE_VERSION}#"
+          git config --global user.name "Mykhailo Kuznietsov"
+          git config --global user.email "mkuznets@redhat.com"
+          export GITHUB_TOKEN=${{ secrets.CHE_BOT_GITHUB_TOKEN }}
+          set -e
+          ./cico_release.sh

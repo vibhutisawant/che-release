@@ -50,7 +50,7 @@ This depends on the che-operator PRs being merged.
 
 1. After creating the PRs, add a link to the new PRs from the release issue, eg.,
     * https://github.com/eclipse/che/issues/18468 -> 
-    * https://github.com/operator-framework/community-operators/pulls?q=is%3Apr+7.22.1
+    * https://github.com/operator-framework/community-operators/pulls?q=is%3Apr+7.23.0
 
 
 ### chectl
@@ -71,7 +71,7 @@ This depends on the che-operator PRs being merged, as well as the community PRs.
 
 * VERSION file - should we add a test to verify we're not trying to re-release an existing release w/o an explicit override?
 
-* add step to delete existing tag if exists and need to re-run a step (eg., broken theia needs a re-release of `:7.22.1`)
+* add step to delete existing tag if exists and need to re-run a step (eg., broken theia needs a re-release of `:7.y.z+1`)
 
 * can run `make-release.sh` for chectl before operator PRs are merged? does it make sense to create the GH release BEFORE we run the make-release script?
 

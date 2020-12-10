@@ -42,56 +42,23 @@ loadMvnSettingsGpgKey() {
 installDeps(){
     set +x
 
-    # enable epel and update to latest
-    sudo yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-    sudo yum -y update 
-    sudo yum -y remove git*
-    sudo yum install -y centos-release-scl-rh
+    # enable epel and update to latest; update to git 2.24 via https://repo.ius.io/7/x86_64/packages/g/
+    yum remove -y -q git* || true
+    yum install -y -q https://repo.ius.io/ius-release-el7.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true
+    yum-config-manager --add-repo https://dl.yarnpkg.com/rpm/yarn.repo
+    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    yum install -y -q centos-release-scl-rh subscription-manager
     subscription-manager repos --enable=rhel-server-rhscl-7-rpms || true
-
-    # update to git 2.18 via https://www.softwarecollections.org/en/scls/rhscl/rh-git218/
-#     sudo yum install -y rh-git218 rh-git218-git-all rh-git218-runtime hub
-#     # enable rh-git218 for all users/bash shells
-#     echo "#!/bin/bash
-# source scl_source enable rh-git218" > /etc/profile.d/enablerh-git218.sh && chmod +x /etc/profile.d/enablerh-git218.sh
-#     # run the enablement script
-#     /etc/profile.d/enablerh-git218.sh
-#     alias git='scl enable rh-git218 bash -c git' # alias approach?
-#     ls -1R /etc/opt/rh/rh-git218/
-#     echo "---"
-#     rpm -ql rh-git218
-#     echo "---"
-#     rpm -ql rh-git218-runtime
-#     echo "---"
-#     rpm -ql rh-git218-git
-#     echo "---"
-#     cat /opt/rh/rh-git218/enable
-#     echo "---"
-
-#     set -x
-#     git --version 
-#     scl enable rh-git218 bash -c git --version
-#     echo "---"
-
-    # update to git 2.24 via https://repo.ius.io/7/x86_64/packages/g/
-    sudo yum install -y https://repo.ius.io/ius-release-el7.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true
-    sudo yum install -y git224-all
+    yum update -y -q 
+    yum install -y -q git224-all skopeo java-11-openjdk-devel yum-utils device-mapper-persistent-data lvm2 docker-ce nodejs yarn gcc-c++ make jq hub python3-pip wget yq podman psmisc
     git --version || exit 1
 
-    yum -y install skopeo
-    yum -y install java-11-openjdk-devel
     mkdir -p /opt/apache-maven && curl -sSL https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz | tar -xz --strip=1 -C /opt/apache-maven
     export JAVA_HOME=/usr/lib/jvm/java-11-openjdk
     export PATH="/usr/lib/jvm/java-11-openjdk:/opt/apache-maven/bin:/usr/bin:${PATH:-/bin:/usr/bin}"
     export JAVACONFDIRS="/etc/java${JAVACONFDIRS:+:}${JAVACONFDIRS:-}"
     export M2_HOME="/opt/apache-maven"
-    yum install -y yum-utils device-mapper-persistent-data lvm2
     curl -sL https://rpm.nodesource.com/setup_10.x | bash -
-    yum-config-manager --add-repo https://dl.yarnpkg.com/rpm/yarn.repo
-    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-    yum install -y docker-ce nodejs yarn gcc-c++ make jq hub
-    yum install -y python3-pip wget yq podman
-    yum install -y psmisc
     echo "BASH VERSION = $BASH_VERSION"
 
     # start docker daemon

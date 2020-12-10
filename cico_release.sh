@@ -3,26 +3,33 @@
 #include common scripts
 . ./cico_common.sh
 
+# TODO make this work for GH action
 loadJenkinsVars() {
-    set +x
-    eval "$(./env-toolkit load -f jenkins-env.json \
-                              CHE_BOT_GITHUB_TOKEN \
-                              CHE_MAVEN_SETTINGS \
-                              CHE_GITHUB_SSH_KEY \
-                              CHE_NPM_AUTH_TOKEN \
-                              CHE_OSS_SONATYPE_GPG_KEY \
-                              CHE_OSS_SONATYPE_PASSPHRASE \
-                              RH_CHE_AUTOMATION_DOCKERHUB_USERNAME \
-                              RH_CHE_AUTOMATION_DOCKERHUB_PASSWORD \
-                              QUAY_ECLIPSE_CHE_USERNAME \
-                              QUAY_ECLIPSE_CHE_PASSWORD \
-                              QUAY_ECLIPSE_CHE_OPERATOR_KUBERNETES_USERNAME \
-                              QUAY_ECLIPSE_CHE_OPERATOR_KUBERNETES_PASSWORD \
-                              QUAY_ECLIPSE_CHE_OPERATOR_OPENSHIFT_USERNAME \
-                              QUAY_ECLIPSE_CHE_OPERATOR_OPENSHIFT_PASSWORD)"
-    export NPM_AUTH_TOKEN=${CHE_NPM_AUTH_TOKEN}                              
+    if [[ -x ./env-toolkit ]]; then
+        set +x
+        eval "$(./env-toolkit load -f jenkins-env.json \
+                                CHE_BOT_GITHUB_TOKEN \
+                                CHE_MAVEN_SETTINGS \
+                                CHE_GITHUB_SSH_KEY \
+                                CHE_NPM_AUTH_TOKEN \
+                                CHE_OSS_SONATYPE_GPG_KEY \
+                                CHE_OSS_SONATYPE_PASSPHRASE \
+                                RH_CHE_AUTOMATION_DOCKERHUB_USERNAME \
+                                RH_CHE_AUTOMATION_DOCKERHUB_PASSWORD \
+                                QUAY_ECLIPSE_CHE_USERNAME \
+                                QUAY_ECLIPSE_CHE_PASSWORD \
+                                QUAY_ECLIPSE_CHE_OPERATOR_KUBERNETES_USERNAME \
+                                QUAY_ECLIPSE_CHE_OPERATOR_KUBERNETES_PASSWORD \
+                                QUAY_ECLIPSE_CHE_OPERATOR_OPENSHIFT_USERNAME \
+                                QUAY_ECLIPSE_CHE_OPERATOR_OPENSHIFT_PASSWORD)"
+    fi
+    # TODO make this work for GH action - where do we get NPM_AUTH_TOKEN ?
+    if [[ $NPM_AUTH_TOKEN ]]; then
+        export NPM_AUTH_TOKEN=${CHE_NPM_AUTH_TOKEN}
+    fi
 }
 
+# TODO make this work for GH action
 loadMvnSettingsGpgKey() {
     set +x
     mkdir $HOME/.m2
@@ -39,9 +46,8 @@ loadMvnSettingsGpgKey() {
     gpg --import $HOME/.m2/gpg.key
 }
 
-installDeps(){
+installRPMDeps(){
     set +x
-
     # enable epel and update to latest; update to git 2.24 via https://repo.ius.io/7/x86_64/packages/g/
     yum remove -y -q git* || true
     yum install -y -q https://repo.ius.io/ius-release-el7.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true
@@ -50,19 +56,32 @@ installDeps(){
     yum install -y -q centos-release-scl-rh subscription-manager
     subscription-manager repos --enable=rhel-server-rhscl-7-rpms || true
     yum update -y -q 
+    # TODO should this be node 12 module?
     yum install -y -q git224-all skopeo java-11-openjdk-devel yum-utils device-mapper-persistent-data lvm2 docker-ce nodejs yarn gcc-c++ make jq hub python3-pip wget yq podman psmisc
+    echo -n "node "; node --version
+    echo -n "npm "; npm --version
+    echo "Installed Packages" && rpm -qa | sort -V && echo "End Of Installed Packages"
     git --version || exit 1
-
-    mkdir -p /opt/apache-maven && curl -sSL https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz | tar -xz --strip=1 -C /opt/apache-maven
     export JAVA_HOME=/usr/lib/jvm/java-11-openjdk
-    export PATH="/usr/lib/jvm/java-11-openjdk:/opt/apache-maven/bin:/usr/bin:${PATH:-/bin:/usr/bin}"
+    export PATH="/usr/lib/jvm/java-11-openjdk:/usr/bin:${PATH:-/bin:/usr/bin}"
     export JAVACONFDIRS="/etc/java${JAVACONFDIRS:+:}${JAVACONFDIRS:-}"
-    export M2_HOME="/opt/apache-maven"
+    # TODO should this be node 12?
     curl -sL https://rpm.nodesource.com/setup_10.x | bash -
-    echo "BASH VERSION = $BASH_VERSION"
-
     # start docker daemon
     service docker start
+}
+
+installDebDeps(){
+    set +x
+    # TODO should this be node 12?
+    curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+    sudo apt-get install -y nodejs
+}
+
+installMaven(){
+    mkdir -p /opt/apache-maven && curl -sSL https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz | tar -xz --strip=1 -C /opt/apache-maven
+    export M2_HOME="/opt/apache-maven"
+    export PATH="/opt/apache-maven/bin:${PATH}"
 }
 
 evaluateCheVariables() {
@@ -183,6 +202,7 @@ checkoutProject() {
 }
 
 # TODO change it to someone else?
+# TODO use a different token?
 setupGitconfig() {
   git config --global user.name "Mykhailo Kuznietsov"
   git config --global user.email mkuznets@redhat.com
@@ -441,22 +461,38 @@ releaseOperator() {
     curl https://api.github.com/repos/eclipse/che-operator/actions/workflows/3593082/dispatches -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"version\":\"${CHE_VERSION}\"} }"
 }
 
-loadJenkinsVars
-loadMvnSettingsGpgKey
-installDeps
-setupGitconfig
+if [[ $1 == "ubuntu" ]]; then
+    # TODO make this work for GH action - where do we get NPM_AUTH_TOKEN ?
+    loadJenkinsVars
+    # TODO make this work for GH action
+    # loadMvnSettingsGpgKey
+    installDebDeps
+    installMaven
+    set -x
+    # TODO use a different token
+    # setupGitconfig
+    # TODO: shouldn't need to do this if using GH action to log in
+    # loginToRegistries
+else
+    loadJenkinsVars
+    loadMvnSettingsGpgKey
+    installRPMDeps
+    installMaven
+    set -x
+    setupGitconfig
+    loginToRegistries
+fi
 
 evaluateCheVariables
-
+echo "BASH VERSION = $BASH_VERSION"
 set -e
 
-loginToRegistries
-
 # Release che-theia, machine-exec and devfile-registry
-
+set +x
 if [[ ${PHASES} == *"1"* ]]; then
     { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
     { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
+    # TODO switch to GH action https://github.com/eclipse/che-devfile-registry/pull/309 + need secrets 
     { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
 fi
 wait
@@ -467,13 +503,16 @@ verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VER
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 30
 
 # Release plugin-registry (depends on che-theia and machine-exec)
+set +x
 if [[ ${PHASES} == *"2"* ]]; then
+    # TODO switch to GH action https://github.com/eclipse/che-plugin-registry/pull/723 + need secrets 
     { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
 fi
 wait
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 30
 
 # Release dashboard and workspace loader
+set +x
 if [[ ${PHASES} == *"3"* ]]; then
     releaseDashboard
     releaseWorkspaceLoader
@@ -482,11 +521,13 @@ verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 30
 
 # Release of Che docs does not depend on server, so trigger and don't wait
+set +x
 if [[ ${PHASES} == *"4"* ]]; then
     releaseCheDocs &
 fi
 
 # Release Che server to Maven central (depends on dashboard and workspace loader)
+set +x
 if [[ ${PHASES} == *"5"* ]]; then
     checkoutProjects
     prepareRelease
@@ -495,6 +536,7 @@ if [[ ${PHASES} == *"5"* ]]; then
 fi
 
 # Release Che images - see DOCKER_FILES_LOCATIONS for array of images to build
+set +x
 if [[ ${PHASES} == *"6"* ]]; then
     buildImages  ${CHE_VERSION}
     tagLatestImages ${CHE_VERSION}
@@ -508,6 +550,7 @@ for image in ${IMAGES_LIST[@]}; do
 done
 
 # Release Che operator (create PRs)
+set -x
 if [[ ${PHASES} == *"7"* ]]; then
     releaseOperator
 fi

@@ -42,11 +42,11 @@ verifyContainerExistsWithTimeout()
 verifyContainerExists()
 {
     this_containerURL="${1}"
-    result="$(skopeo inspect "docker://${this_containerURL}" 2>&1)"
+    result="$(skopeo inspect "docker://${this_containerURL}" 2>&1 || true)"
     if [[ $result == *"Error reading manifest"* ]] || [[ $result == *"no such image" ]] || [[ $result == *"manifest unknown" ]]; then # image does not exist
         containerExists=0
     else
-        digest="$(echo "$result" | jq -r '.Digest' 2>&1)"
+        digest="$(echo "$result" | jq -r '.Digest' 2>&1 || true)"
         if [[ $digest != "error"* ]] && [[ $digest != *"Invalid"* ]]; then
             containerExists=1
             echo "[INFO] Found ${this_containerURL} (${digest})"

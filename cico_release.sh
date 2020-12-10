@@ -375,7 +375,7 @@ bumpVersion() {
     pushd che >/dev/null
         git checkout $2
         if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-            mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]
+            mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${VERSION_CHE_PARENT}]
         fi
         mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1
         sed -i -e "s#<che.dashboard.version>.*<\/che.dashboard.version>#<che.dashboard.version>$1<\/che.dashboard.version>#" pom.xml
@@ -406,18 +406,18 @@ prepareRelease() {
             # Install previous version, in case it is not available in central repo
             # which is needed for dependent projects
             mvn clean install
-            mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}
+            mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${VERSION_CHE_PARENT}
             mvn clean install
         popd >/dev/null
+        echo "[INFO] Che Parent version has been updated to ${VERSION_CHE_PARENT}"
     fi
-    echo "[INFO] Che Parent version has been updated"
 
     pushd che >/dev/null
         if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-            mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${CHE_VERSION}]
+            mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=false -DparentVersion=[${VERSION_CHE_PARENT}]
         fi
         mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=false -DnewVersion=${CHE_VERSION}
-        echo "[INFO] Che Server version has been updated"
+        echo "[INFO] Che Server version has been updated to ${CHE_VERSION} (parentVersion = ${VERSION_CHE_PARENT})"
 
         # Replace dependencies in che-server parent
         sed -i -e "s#<che.dashboard.version>.*<\/che.dashboard.version>#<che.dashboard.version>${CHE_VERSION}<\/che.dashboard.version>#" pom.xml
@@ -427,9 +427,10 @@ prepareRelease() {
         # TODO pull parent pom version from VERSION file, instead of being hardcoded
         pushd typescript-dto >/dev/null
             sed -i -e "s#<che.version>.*<\/che.version>#<che.version>${CHE_VERSION}<\/che.version>#" dto-pom.xml
-            # Do not change the version of the parent pom, which if fixed
+            # Do not change the version of the parent pom, which is fixed
+            # TODO is this correct? seems like we're setting parent to a version that doesn't exist, rather than hardcoding to VERSION_CHE_PARENT value
             sed -i -e "/<version>${VERSION_CHE_PARENT}<\/version>/ ! s#<version>.*<\/version>#<version>${CHE_VERSION}<\/version>#" dto-pom.xml
-            echo "[INFO] Dependencies updated in che typescript DTO"
+            echo "[INFO] Dependencies updated in che typescript DTO (should have parent = ${VERSION_CHE_PARENT}, not ${CHE_VERSION})"
         popd >/dev/null
 
         # TODO more elegant way to execute these scripts

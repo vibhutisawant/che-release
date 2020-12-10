@@ -331,7 +331,6 @@ pushImagesOnQuay() {
 
 commitChangeOrCreatePR() {
     set +e
-
     aVERSION="$1"
     aBRANCH="$2"
     PR_BRANCH="$3"
@@ -353,7 +352,6 @@ commitChangeOrCreatePR() {
         lastCommitComment="$(git log -1 --pretty=%B)"
         hub pull-request -f -m "${lastCommitComment}" -b "${aBRANCH}" -h "${PR_BRANCH}"
     fi
-    
     set -e
 }
 
@@ -362,7 +360,7 @@ bumpVersion() {
     echo "[info]bumping to version $1 in branch $2"
 
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-        cd che-parent
+        pushd che-parent >/dev/null
         git checkout $2
         #install previous version, in case it is not available in central repo
         #which is needed for dependent projects
@@ -371,24 +369,25 @@ bumpVersion() {
         mvn versions:set -DgenerateBackupPoms=false -DnewVersion=${CHE_VERSION}
         mvn clean install
         commitChangeOrCreatePR ${CHE_VERSION} $2 "pr-${2}-to-${1}"
-        cd ..
+        popd >/dev/null
     fi
 
-    cd che
-    git checkout $2
-    if [[ $RELEASE_CHE_PARENT = "true" ]]; then
-        mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]
-    fi
-    mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1
-    sed -i -e "s#<che.dashboard.version>.*<\/che.dashboard.version>#<che.dashboard.version>$1<\/che.dashboard.version>#" pom.xml
-    sed -i -e "s#<che.version>.*<\/che.version>#<che.version>$1<\/che.version>#" pom.xml
-    cd typescript-dto
-        sed -i -e "s#<che.version>.*<\/che.version>#<che.version>${1}<\/che.version>#" dto-pom.xml
-        sed -i -e "s#<version>.*<\/version>#<version>${1}<\/version>#" dto-pom.xml
-    cd ..
+    pushd che >/dev/null
+        git checkout $2
+        if [[ $RELEASE_CHE_PARENT = "true" ]]; then
+            mvn versions:update-parent -DgenerateBackupPoms=false -DallowSnapshots=true -DparentVersion=[${CHE_VERSION}]
+        fi
+        mvn versions:set -DgenerateBackupPoms=false -DallowSnapshots=true -DnewVersion=$1
+        sed -i -e "s#<che.dashboard.version>.*<\/che.dashboard.version>#<che.dashboard.version>$1<\/che.dashboard.version>#" pom.xml
+        sed -i -e "s#<che.version>.*<\/che.version>#<che.version>$1<\/che.version>#" pom.xml
+        pushd typescript-dto >/dev/null
+            sed -i -e "s#<che.version>.*<\/che.version>#<che.version>${1}<\/che.version>#" dto-pom.xml
+            sed -i -e "s#<version>.*<\/version>#<version>${1}<\/version>#" dto-pom.xml
+        popd >/dev/null
 
-    commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
-    cd ..    
+        commitChangeOrCreatePR $1 $2 "pr-${2}-to-${1}"
+    popd >/dev/null
+    set +x
 }
 
 updateImageTagsInCheServer() {

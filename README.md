@@ -34,7 +34,12 @@ Note that over time, this job, and all the jobs called by it, will be migrated t
 
 ### community operators
 
-TODO: this should be run inside a GH action. But how can we trigger it ONLY when the above PR is merged, not all pushes?
+TODO: [move this step into a GH action](https://github.com/eclipse/che-operator/pull/572). 
+TODO: set up the above action to fire when a PR like https://github.com/eclipse/che-operator/pull/571/files is merged, eg., 
+    when:
+        olm/eclipse-che-preview-openshift/deploy/olm-catalog/eclipse-che-preview-openshift/eclipse-che-preview-openshift.package.yaml and 
+        olm/eclipse-che-preview-kubernetes/deploy/olm-catalog/eclipse-che-preview-kubernetes/eclipse-che-preview-kubernetes.package.yaml 
+    are updated
 
 This depends on the che-operator PRs being merged.
 
@@ -55,6 +60,10 @@ This depends on the che-operator PRs being merged.
 
 ### chectl
 
+TODO: set GH action to trigger when community PRs are merged? 
+
+TODO: should we be creating a "release" before we've merged the chectl PR? Surely the GH "release" should FOLLOW the PR merge?
+
 This depends on the che-operator PRs being merged, as well as the community PRs. 
 
 1. Run this action: https://github.com/che-incubator/chectl/actions?query=workflow%3A%22Release+chectl%22
@@ -62,8 +71,6 @@ This depends on the che-operator PRs being merged, as well as the community PRs.
 1. Find the generated PR: https://github.com/che-incubator/chectl/pulls?q=is%3Apr+is%3Aopen+%22Release+version%22+author%3Aapp%2Fgithub-actions
 
 1. Once approved / tests passed / known failures overridden, commit the PR, eg., https://github.com/che-incubator/chectl/pull/1021
-
-* TODO: should we be creating a "release" before we've merged the chectl PR? Surely the GH "release" should FOLLOW the PR merge?
 
 --------------
 

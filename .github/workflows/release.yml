@@ -58,12 +58,12 @@ jobs:
       #     username: ${{ secrets.DOCKERHUB_USERNAME }}
       #     password: ${{ secrets.DOCKERHUB_PASSWORD }}
       #     registry: docker.io
-      # - name: Login to quay.io
-      #   uses: docker/login-action@v1
-      #   with:
-      #     username: ${{ secrets.QUAY_USERNAME }}
-      #     password: ${{ secrets.QUAY_PASSWORD }}
-      #     registry: quay.io
+      - name: Login to quay.io
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+          registry: quay.io
       - name: Release
         run: |
           CHE_VERSION=${{ github.event.inputs.version }}

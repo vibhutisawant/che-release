@@ -79,9 +79,12 @@ installDebDeps(){
 }
 
 installMaven(){
+    set -x
     mkdir -p /opt/apache-maven && curl -sSL https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz | tar -xz --strip=1 -C /opt/apache-maven
     export M2_HOME="/opt/apache-maven"
     export PATH="/opt/apache-maven/bin:${PATH}"
+    mvn -version || die_with "mvn not found in path: ${PATH} !"
+    set +x
 }
 
 evaluateCheVariables() {
@@ -466,7 +469,6 @@ if [[ $1 == "ubuntu" ]]; then
     # TODO make this work for GH action
     # loadMvnSettingsGpgKey
     installDebDeps
-    installMaven
     set -x
     # TODO use a different token
     # setupGitconfig
@@ -476,7 +478,6 @@ else
     loadJenkinsVars
     loadMvnSettingsGpgKey
     installRPMDeps
-    installMaven
     set -x
     setupGitconfig
     loginToRegistries
@@ -523,6 +524,12 @@ verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loade
 set +x
 if [[ ${PHASES} == *"4"* ]]; then
     releaseCheDocs &
+fi
+
+set +x
+# only need maven for che server (5) + bumping versions in sources (6)
+if [[ ${PHASES} == *"5"* ]] || [[ ${PHASES} == *"6"* ]]; then
+    installMaven
 fi
 
 # Release Che server to Maven central (depends on dashboard and workspace loader)

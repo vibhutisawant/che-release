@@ -556,7 +556,7 @@ for image in ${IMAGES_LIST[@]}; do
 done
 
 # Release Che operator (create PRs)
-set -x
+set +x
 if [[ ${PHASES} == *"7"* ]]; then
     releaseOperator
 fi

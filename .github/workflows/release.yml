@@ -30,14 +30,13 @@ jobs:
           sudo add-apt-repository -y ppa:openjdk-r/ppa || true # for jdk11
           sudo apt-get update -y || true
           # install more dependencies
-          sudo apt-get -y install wget curl bash openjdk-11-jdk-headless git skopeo podman 
+          sudo apt-get -y -q install wget curl bash openjdk-11-jdk-headless git skopeo podman 
           java -version
 
           /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          brew install hub
-          # want git >=2.24, hub >2
-          git version
-          hub --version
+          # want git >=2.24, hub >=2
+          # git version
+          brew install hub -q && hub --version # hub reports git version too
 
           # want >=5
           bash --version
@@ -47,12 +46,25 @@ jobs:
           # want >=2 
           podman --version
 
-          # do we need all these?
+          # do we need any of these?
           # docker-ce          x86_64  3:19.03.14-3.el7            docker-ce-stable   24 M
           # gcc-c++            x86_64  4.8.5-44.el7                base              7.2 M
-          # bash >=5
           # nodejs             x86_64  2:10.23.0-1nodesource       nodesource         20 M
           # yarn               noarch  1.22.5-1                    yarn              1.2 M
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to docker.io
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          registry: docker.io
+      - name: Login to quay.io
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+          registry: quay.io
       - name: Release
         run: |
           CHE_VERSION=${{ github.event.inputs.version }}
@@ -62,4 +74,12 @@ jobs:
           git config --global user.email "mkuznets@redhat.com"
           export GITHUB_TOKEN=${{ secrets.CHE_BOT_GITHUB_TOKEN }}
           set -e
-          ./cico_release.sh
+          # TODO exported vars shouldn't be needed here if we use login-action above. Need to instead disable method loginToRegistries in cico_release.sh to skip that step
+          # export quay and docker logins - need to set them up first in https://github.com/eclipse/che-release/settings/secrets/actions
+          export QUAY_ECLIPSE_CHE_USERNAME="${{ secrets.QUAY_USERNAME }}"
+          export QUAY_ECLIPSE_CHE_PASSWORD="${{ secrets.QUAY_PASSWORD }}"
+          export RH_CHE_AUTOMATION_DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
+          export RH_CHE_AUTOMATION_DOCKERHUB_PASSWORD="${{ secrets.DOCKERHUB_PASSWORD }}"
+          # determine which OS we're using: rhel or ubuntu
+          cat /etc/os-release || true
+          ./cico_release.sh ubuntu

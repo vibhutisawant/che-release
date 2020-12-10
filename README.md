@@ -26,49 +26,11 @@ Note that over time, this job, and all the jobs called by it, will be migrated t
 
     TODO: add notification when build is done - email? slack? mattermost?
 
-1. NOTE: If the build should fail, check log for which step crashed (eg., due to [rate limiting](https://github.com/eclipse/che/issues/18292) or other errors). If possible, avoid commenting out the parts of `cico_release.sh` script; instead simply remove the `PHASES` from the `VERSION` file and commit that change to the `release` branch to trigger the build again.
+1. NOTE: If the build should fail, check log for which step crashed (eg., due to [rate limiting](https://github.com/eclipse/che/issues/18292) or other errors), like E2E test failures. Sometimes simply re-running will help.
+
+1. To skip sections which have completed successfully, simply remove `PHASES` from the `VERSION` file and commit that change to the `release` branch to trigger the parts of the release that were not successful.
 
 ## Phase 2 - manual steps
-
-### che-operator
-
-TODO: verify that these 3 steps are no longer needed as of 7.23.0 release. See https://github.com/eclipse/che/issues/18393
-
-1. When che-operator PRs are created, manually do this step to create new CSVs so that update tests will succeed on the che-operator PRs:
-```
-    export QUAY_ECLIPSE_CHE_USERNAME=[your quay user]
-    export QUAY_ECLIPSE_CHE_PASSWORD=[your quay password or token]
-
-    # DOESN'T WORK ON CENTOS CI, has to be done manually after PR generation
-    CHE_VERSION=7.22.2
-
-    pushd /tmp >/dev/null
-      git clone git@github.com:eclipse/che-operator.git || true
-      pushd che-operator >/dev/null
-        # check out the correct che-operator branch
-        git checkout ${CHE_VERSION}-release 
-
-        # push the olm files
-        ./make-release.sh ${CHE_VERSION} --push-olm-files
-      popd >/dev/null
-    popd >/dev/null
-    rm -fr /tmp/che-operator
-    
-    # TODO: move this into the che-operator "release" GH action so it can happen more automatically as part of the che-release script
-```
-(if this fails, check permissions above)
-
-2. Manually re-trigger PR checks on 2 `che-operator` PRs (one for master, one for .x branch), eg., for 7.22.0, find PRs using query: https://github.com/eclipse/che-operator/pulls?q=is%3Apr+is%3Aopen+7.22.2
-    * https://github.com/eclipse/che-operator/pull/562
-    * https://github.com/eclipse/che-operator/pull/561
-    
-    * TODO: via GH API, send "/retest" to the PRs to retrigger the prow jobs.
-    * TODO: figure out how to retrigger the other 'minikube' 'update' tests automatically (2 per PR)
-
-    If anything goes wrong, check with Anatolii or Flavius for manual checks / failure overrides
-
-1. Push operator PRs when checks have completed and they're approved 
-
 
 ### community operators
 

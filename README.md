@@ -60,17 +60,18 @@ This depends on the che-operator PRs being merged.
 
 ### chectl
 
-TODO: set GH action to trigger when community PRs are merged? 
+TODO: set GH action to trigger when community PRs are merged? Can we trigger across repos? See problem in https://github.com/eclipse/che/issues/18627
 
-TODO: should we be creating a "release" before we've merged the chectl PR? Surely the GH "release" should FOLLOW the PR merge?
 
-This depends on the che-operator PRs being merged, as well as the community PRs. 
+This depends on the che-operator PRs being merged (but not the community PRs).
 
-1. Run this action: https://github.com/che-incubator/chectl/actions?query=workflow%3A%22Release+chectl%22
+1. Run this action: https://github.com/che-incubator/chectl/actions?query=workflow%3A%22Release+-+create+pull+request+for+upcoming+release%22
 
-1. Find the generated PR: https://github.com/che-incubator/chectl/pulls?q=is%3Apr+is%3Aopen+%22Release+version%22+author%3Aapp%2Fgithub-actions
+1. Find the generated PR: https://github.com/che-incubator/chectl/pulls?q=is%3Apr+author%3Aapp%2Fgithub-actions+%22Release+version%22+is%3Aopen
 
 1. Once approved / tests passed / known failures overridden, commit the PR, eg., https://github.com/che-incubator/chectl/pull/1021
+
+1. This second action should run automatically on commit of the above PR: https://github.com/che-incubator/chectl/actions?query=workflow%3A%22Release+-+generate%20release%20and%20push%20artifacts%20to%20github%20pages%20(after%20PR%20approved)%22
 
 --------------
 

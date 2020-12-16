@@ -8,9 +8,9 @@ on:
         required: true
         default: '7.y.z'
       phases:
-        description: 'The phases to be run: omit phases that have successfully run already. Should be in format " 1 2 3 4 5 6 7 8 " (with prefix/suffix spaces to separate them)'
+        description: 'List of comma-separated phases to perform; default should be "1,2,3,4,5,6,7"; omit phases that have successfully run'
         required: true
-        default: ' 1 2 3 4 5 6 7 8 '
+        default: '1,2,3,4,5,6,7'
 jobs:
   build:
     runs-on: ubuntu-20.04

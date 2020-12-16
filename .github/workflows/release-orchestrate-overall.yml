@@ -49,10 +49,8 @@ jobs:
           sudo apt-get -y -q install wget curl bash openjdk-11-jdk-headless git skopeo podman 
           java -version
 
-          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
           # want git >=2.24, hub >=2
-          # git version
-          brew install hub -q && hub --version # hub reports git version too
+          hub --version # hub reports git version too
 
           # want >=5
           bash --version

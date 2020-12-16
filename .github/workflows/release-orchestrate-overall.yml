@@ -69,11 +69,11 @@ jobs:
           # yarn               noarch  1.22.5-1                    yarn              1.2 M
       - name: Release
         run: |
-          CHE_VERSION=${{ github.event.inputs.version }}
+          CHE_VERSION="${{ github.event.inputs.version }}"
           echo "CHE_VERSION=${CHE_VERSION}"
           sed -i VERSION -r -e "s#CHE_VERSION=.*#CHE_VERSION=${CHE_VERSION}#"
 
-          PHASES=${{ github.event.inputs.phases }}
+          PHASES="${{ github.event.inputs.phases }}"
           echo "PHASES=${PHASES}"
           sed -i VERSION -r -e "s#PHASES=.*#PHASES=${PHASES}#"
 

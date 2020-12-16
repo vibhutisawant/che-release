@@ -1,5 +1,5 @@
 # This Workflow performs a full release of Che
-name: Overall Che Release Orchestrator
+name: Release - Orchestrate Overall Release Phases
 on:
   workflow_dispatch:
     inputs:
@@ -7,6 +7,10 @@ on:
         description: 'The version that is going to be released. Should be in format 7.y.z'
         required: true
         default: '7.y.z'
+      phases:
+        description: 'The phases to be run: omit phases that have successfully run already. Should be in format " 1 2 3 4 5 6 7 8 " (with prefix/suffix spaces to separate them)'
+        required: true
+        default: ' 1 2 3 4 5 6 7 8 '
 jobs:
   build:
     runs-on: ubuntu-20.04
@@ -68,6 +72,11 @@ jobs:
           CHE_VERSION=${{ github.event.inputs.version }}
           echo "CHE_VERSION=${CHE_VERSION}"
           sed -i VERSION -r -e "s#CHE_VERSION=.*#CHE_VERSION=${CHE_VERSION}#"
+
+          PHASES=${{ github.event.inputs.phases }}
+          echo "PHASES=${PHASES}"
+          sed -i VERSION -r -e "s#PHASES=.*#PHASES=${PHASES}#"
+
           git config --global user.name "Mykhailo Kuznietsov"
           git config --global user.email "mkuznets@redhat.com"
           export GITHUB_TOKEN=${{ secrets.CHE_BOT_GITHUB_TOKEN }}

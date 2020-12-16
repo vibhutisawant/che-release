@@ -245,6 +245,7 @@ tagAndCommit() {
 DOCKER_FILES_LOCATIONS=(
     che/dockerfiles/endpoint-watcher
     che/dockerfiles/keycloak
+    che/dockerfiles/postgres
     che/dockerfiles/dev
     che/dockerfiles/che
     che/dockerfiles/dashboard-dev
@@ -254,6 +255,7 @@ DOCKER_FILES_LOCATIONS=(
 IMAGES_LIST=(
     quay.io/eclipse/che-endpoint-watcher
     quay.io/eclipse/che-keycloak
+    quay.io/eclipse/che-postgres
     quay.io/eclipse/che-dev
     quay.io/eclipse/che-server
     quay.io/eclipse/che-dashboard-dev

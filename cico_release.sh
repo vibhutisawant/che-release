@@ -132,7 +132,9 @@ releaseCheServer() {
     if [[ $RELEASE_CHE_PARENT = "true" ]]; then
         pushd che-parent >/dev/null
         rm -f $tmpmvnlog || true
+        set +e
         mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE | tee $tmpmvnlog
+        set -e
         # try maven build again if Nexus dies
         if grep -q -E "502 - Bad Gateway|Nexus connection problem" $tmpmvnlog; then
             rm -f $tmpmvnlog || true
@@ -144,7 +146,9 @@ releaseCheServer() {
             if [[ ${DEPLOY_TO_NEXUS} == "true" ]]; then
                 echo 'Deploy che-parent artifacts to nexus'
                 rm -f $tmpmvnlog || true
+                set +e
                 mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DautoReleaseAfterClose=$AUTORELEASE_ON_NEXUS -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE | tee $tmpmvnlog
+                set -e
                 # try maven build again if Nexus dies
                 if grep -q -E "502 - Bad Gateway|Nexus connection problem" $tmpmvnlog; then
                     rm -f $tmpmvnlog || true
@@ -162,7 +166,9 @@ releaseCheServer() {
 
     pushd che >/dev/null
     rm -f $tmpmvnlog || true
+    set +e
     mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE | tee $tmpmvnlog
+    set -e
     # try maven build again if Nexus dies
     if grep -q -E "502 - Bad Gateway|Nexus connection problem" $tmpmvnlog; then
         rm -f $tmpmvnlog || true
@@ -174,7 +180,9 @@ releaseCheServer() {
         if [[ ${DEPLOY_TO_NEXUS} == "true" ]]; then
             echo 'Deploy che-server artifacts to nexus'
             rm -f $tmpmvnlog || true
+            set +e
             mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DautoReleaseAfterClose=$AUTORELEASE_ON_NEXUS -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE | tee $tmpmvnlog
+            set -e
             # try maven build again if Nexus dies
             if grep -q -E "502 - Bad Gateway|Nexus connection problem" $tmpmvnlog; then
                 rm -f $tmpmvnlog || true

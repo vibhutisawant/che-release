@@ -501,7 +501,7 @@ if [[ $1 == "ubuntu" ]]; then
     # TODO make this work for GH action - where do we get NPM_AUTH_TOKEN ?
     loadJenkinsVars
     # TODO make this work for GH action
-    # loadMvnSettingsGpgKey
+    loadMvnSettingsGpgKey
     installDebDeps
     set -x
     # TODO use a different token

@@ -70,21 +70,20 @@ jobs:
           CHE_VERSION="${{ github.event.inputs.version }}"
           echo "CHE_VERSION=${CHE_VERSION}"
           sed -i VERSION -r -e "s#CHE_VERSION=.*#CHE_VERSION=${CHE_VERSION}#"
-
           PHASES="${{ github.event.inputs.phases }}"
           echo "PHASES=${PHASES}"
           sed -i VERSION -r -e "s#PHASES=.*#PHASES=${PHASES}#"
+
+          export CHE_MAVEN_SETTINGS=${{ secrets.CHE_MAVEN_SETTINGS}}
+          export CHE_OSS_SONATYPE_GPG_KEY=${{ secrets.CHE_OSS_SONATYPE_GPG_KEY}}
+          export CHE_OSS_SONATYPE_PASSPHRASE=${{ secrets.CHE_OSS_SONATYPE_PASSPHRASE}}
+          export CHE_GITHUB_SSH_KEY=${{ secrets.CHE_GITHUB_SSH_KEY}}
+          export CHE_NPM_AUTH_TOKEN=${{ secrets.CHE_NPM_AUTH_TOKEN}}
 
           git config --global user.name "Mykhailo Kuznietsov"
           git config --global user.email "mkuznets@redhat.com"
           export GITHUB_TOKEN=${{ secrets.CHE_BOT_GITHUB_TOKEN }}
           set -e
-          # TODO exported vars shouldn't be needed here if we use login-action above. Need to instead disable method loginToRegistries in cico_release.sh to skip that step
-          # export quay and docker logins - need to set them up first in https://github.com/eclipse/che-release/settings/secrets/actions
-          export QUAY_ECLIPSE_CHE_USERNAME="${{ secrets.QUAY_USERNAME }}"
-          export QUAY_ECLIPSE_CHE_PASSWORD="${{ secrets.QUAY_PASSWORD }}"
-          export RH_CHE_AUTOMATION_DOCKERHUB_USERNAME="${{ secrets.DOCKERHUB_USERNAME }}"
-          export RH_CHE_AUTOMATION_DOCKERHUB_PASSWORD="${{ secrets.DOCKERHUB_PASSWORD }}"
           # determine which OS we're using: rhel or ubuntu
           cat /etc/os-release || true
           ./cico_release.sh ubuntu

@@ -118,12 +118,12 @@ releaseCheDocs() {
 
 releaseDashboard() {
     echo "[INFO] Invoke che-dashboard release action: https://github.com/eclipse/che-dashboard/actions?query=workflow%3A%22Release+Che+Dashboard%22"
-    curl https://api.github.com/repos/eclipse/che-dashboard/actions/workflows/3152474/dispatches -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"version\":\"${CHE_VERSION}\"} }"
+    curl https://api.github.com/repos/eclipse/che-dashboard/actions/workflows/3152474/dispatches -X POST -H "Authorization: token ${CHE_BOT_GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"version\":\"${CHE_VERSION}\"} }"
 }
 
 releaseWorkspaceLoader() {
     echo "[INFO] Invoke che-workspace-loader release action: https://github.com/eclipse/che-workspace-loader/actions?query=workflow%3A%22Release+Che+Workspace+Loader%22"
-    curl https://api.github.com/repos/eclipse/che-workspace-loader/actions/workflows/3543888/dispatches -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"version\":\"${CHE_VERSION}\"} }"
+    curl https://api.github.com/repos/eclipse/che-workspace-loader/actions/workflows/3543888/dispatches -X POST -H "Authorization: token ${CHE_BOT_GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"version\":\"${CHE_VERSION}\"} }"
 }
 
 releaseCheServer() {
@@ -245,7 +245,7 @@ setupGitconfig() {
 
   # hub CLI configuration
   git config --global push.default matching
-  export GITHUB_TOKEN=$CHE_BOT_GITHUB_TOKEN
+  export GITHUB_TOKEN=${CHE_BOT_GITHUB_TOKEN}
 }
 
 createTags() {
@@ -494,7 +494,7 @@ bumpVersions() {
 
 releaseOperator() {
     echo "[INFO] Invoke che-operator release action: https://github.com/eclipse/che-operator/actions?query=workflow%3Arelease"
-    curl https://api.github.com/repos/eclipse/che-operator/actions/workflows/3593082/dispatches -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"version\":\"${CHE_VERSION}\"} }"
+    curl https://api.github.com/repos/eclipse/che-operator/actions/workflows/3593082/dispatches -X POST -H "Authorization: token ${CHE_BOT_GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"version\":\"${CHE_VERSION}\"} }"
 }
 
 if [[ $1 == "ubuntu" ]]; then

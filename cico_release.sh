@@ -505,8 +505,7 @@ if [[ $1 == "ubuntu" ]]; then
     loadMvnSettingsGpgKey
     installDebDeps
     set -x
-    # TODO use a different token
-    # setupGitconfig
+    setupGitconfig
     # TODO: shouldn't need to do this if using GH action to log in
     # loginToRegistries
 else

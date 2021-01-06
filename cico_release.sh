@@ -44,6 +44,7 @@ loadMvnSettingsGpgKey() {
     ssh-keyscan github.com >> ~/.ssh/known_hosts
     set -x
     gpg --import --batch $HOME/.m2/gpg.key
+    export GPG_TTY=$(tty)
 }
 
 installRPMDeps(){

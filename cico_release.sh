@@ -46,6 +46,7 @@ loadMvnSettingsGpgKey() {
     gpg --import --batch $HOME/.m2/gpg.key
     export GPG_TTY=$(tty)
     gpg --version
+}
 
 installRPMDeps(){
     set +x

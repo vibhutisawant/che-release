@@ -43,9 +43,9 @@ loadMvnSettingsGpgKey() {
     chmod 0400 $HOME/.ssh/id_rsa
     ssh-keyscan github.com >> ~/.ssh/known_hosts
     set -x
+    export GPG_TTY=$(tty)
     gpg --import $HOME/.m2/gpg.key
     # gpg --import --batch $HOME/.m2/gpg.key
-    # export GPG_TTY=$(tty)
     gpg --version
 }
 

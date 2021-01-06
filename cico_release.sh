@@ -43,7 +43,7 @@ loadMvnSettingsGpgKey() {
     chmod 0400 $HOME/.ssh/id_rsa
     ssh-keyscan github.com >> ~/.ssh/known_hosts
     set -x
-    gpg --import $HOME/.m2/gpg.key
+    gpg --import --batch $HOME/.m2/gpg.key
 }
 
 installRPMDeps(){
@@ -582,11 +582,12 @@ if [[ ${PHASES} == *"6"* ]]; then
     pushImagesOnQuay ${CHE_VERSION} pushLatest
     bumpVersions
     updateImageTagsInCheServer
+
+    # verify images all created from IMAGES_LIST
+    for image in ${IMAGES_LIST[@]}; do
+        verifyContainerExistsWithTimeout ${image}:${CHE_VERSION} 30
+    done
 fi
-# verify images all created from IMAGES_LIST
-for image in ${IMAGES_LIST[@]}; do
-    verifyContainerExistsWithTimeout ${image}:${CHE_VERSION} 30
-done
 
 # Release Che operator (create PRs)
 set +x

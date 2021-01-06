@@ -550,7 +550,7 @@ verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry
 # Release dashboard and workspace loader
 set +x
 if [[ ${PHASES} == *"3"* ]]; then
-    #releaseDashboard
+    releaseDashboard
     releaseWorkspaceLoader
 fi
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 30
@@ -572,17 +572,17 @@ fi
 set +x
 if [[ ${PHASES} == *"5"* ]]; then
     checkoutProjects
-    prepareRelease
-    createTags
-    releaseCheServer
+    # prepareRelease
+    # createTags
+    # releaseCheServer
 fi
 
 # Release Che images - see DOCKER_FILES_LOCATIONS for array of images to build
 set +x
 if [[ ${PHASES} == *"6"* ]]; then
-    buildImages  ${CHE_VERSION}
-    tagLatestImages ${CHE_VERSION}
-    pushImagesOnQuay ${CHE_VERSION} pushLatest
+    # buildImages  ${CHE_VERSION}
+    # tagLatestImages ${CHE_VERSION}
+    # pushImagesOnQuay ${CHE_VERSION} pushLatest
     bumpVersions
     updateImageTagsInCheServer
 

@@ -45,7 +45,7 @@ loadMvnSettingsGpgKey() {
     set -x
     gpg --import --batch $HOME/.m2/gpg.key
     export GPG_TTY=$(tty)
-}
+    gpg --version
 
 installRPMDeps(){
     set +x
@@ -134,12 +134,12 @@ releaseCheServer() {
         pushd che-parent >/dev/null
         rm -f $tmpmvnlog || true
         set +e
-        mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE | tee $tmpmvnlog
+        mvn clean install -ntp -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE | tee $tmpmvnlog
         set -e
         # try maven build again if Nexus dies
         if grep -q -E "502 - Bad Gateway|Nexus connection problem" $tmpmvnlog; then
             rm -f $tmpmvnlog || true
-            mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE 
+            mvn clean install -ntp -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE 
         fi
 
         if [ $? -eq 0 ]; then
@@ -148,12 +148,12 @@ releaseCheServer() {
                 echo 'Deploy che-parent artifacts to nexus'
                 rm -f $tmpmvnlog || true
                 set +e
-                mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DautoReleaseAfterClose=$AUTORELEASE_ON_NEXUS -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE | tee $tmpmvnlog
+                mvn clean deploy -ntp -Pcodenvy-release -DcreateChecksum=true -DautoReleaseAfterClose=$AUTORELEASE_ON_NEXUS -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE | tee $tmpmvnlog
                 set -e
                 # try maven build again if Nexus dies
                 if grep -q -E "502 - Bad Gateway|Nexus connection problem" $tmpmvnlog; then
                     rm -f $tmpmvnlog || true
-                    mvn clean deploy -Pcodenvy-release -DcreateChecksum=true -DautoReleaseAfterClose=$AUTORELEASE_ON_NEXUS -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
+                    mvn clean deploy -ntp -Pcodenvy-release -DcreateChecksum=true -DautoReleaseAfterClose=$AUTORELEASE_ON_NEXUS -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE
                 fi
             else
                 echo "[WARN] No deployment to Nexus as DEPLOY_TO_NEXUS = ${DEPLOY_TO_NEXUS}"

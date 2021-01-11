@@ -248,6 +248,7 @@ setupGitconfig() {
 
   # hub CLI configuration
   git config --global push.default matching
+  export GITHUB_TOKEN=${CHE_BOT_GITHUB_TOKEN}
 }
 
 createTags() {

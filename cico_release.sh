@@ -572,17 +572,17 @@ fi
 set +x
 if [[ ${PHASES} == *"5"* ]]; then
     checkoutProjects
-    # prepareRelease
-    # createTags
-    # releaseCheServer
+    prepareRelease
+    createTags
+    releaseCheServer
 fi
 
 # Release Che images - see DOCKER_FILES_LOCATIONS for array of images to build
 set +x
 if [[ ${PHASES} == *"6"* ]]; then
-    # buildImages  ${CHE_VERSION}
-    # tagLatestImages ${CHE_VERSION}
-    # pushImagesOnQuay ${CHE_VERSION} pushLatest
+    buildImages  ${CHE_VERSION}
+    tagLatestImages ${CHE_VERSION}
+    pushImagesOnQuay ${CHE_VERSION} pushLatest
     bumpVersions
     updateImageTagsInCheServer
 

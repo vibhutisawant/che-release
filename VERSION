@@ -1,5 +1,5 @@
 # che version to release
-CHE_VERSION=7.24.1
+CHE_VERSION=7.24.2
 # if true, release and deploy che parent
 RELEASE_CHE_PARENT=false
 # version of Che parent to use in maven builds

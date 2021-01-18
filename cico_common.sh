@@ -39,18 +39,33 @@ verifyContainerExistsWithTimeout()
 }
 
 # for a given container URL, check if it exists and its digest can be read
+# verifyContainerExists quay.io/crw/pluginregistry-rhel8:2.6 # schemaVersion = 1, look for tag
+# verifyContainerExists quay.io/eclipse/che-plugin-registry:7.24.2 # schemaVersion = 2, look for arches
+
 verifyContainerExists()
 {
     this_containerURL="${1}"
-    result="$(skopeo inspect "docker://${this_containerURL}" 2>&1 || true)"
-    if [[ $result == *"Error reading manifest"* ]] || [[ $result == *"no such image" ]] || [[ $result == *"manifest unknown" ]]; then # image does not exist
-        containerExists=0
-    else
-        digest="$(echo "$result" | jq -r '.Digest' 2>&1 || true)"
-        if [[ $digest != "error"* ]] && [[ $digest != *"Invalid"* ]]; then
-            containerExists=1
-            echo "[INFO] Found ${this_containerURL} (${digest})"
+    this_image=""; this_tag=""
+    this_image=${this_containerURL#*/}
+    this_tag=${this_image##*:}
+    this_image=${this_image%%:*}
+    this_url="https://quay.io/v2/${this_image}/manifests/${this_tag}"
+    # echo $this_url
+
+    # get result=tag if tag found, result="null" if not
+    result="$(curl -sSL "${this_url}"  -H "Accept: application/vnd.docker.distribution.manifest.list.v2+json" 2>&1 || true)"
+    if [[ $(echo "$result" | jq -r '.schemaVersion' || true) == "1" ]] && [[ $(echo "$result" | jq -r '.tag' || true) == "$this_tag" ]]; then
+        echo "[INFO] Found ${this_containerURL} (tag = $this_tag)"
+        containerExists=1
+    elif [[ $(echo "$result" | jq -r '.schemaVersion' || true) == "2" ]]; then
+        arches=$(echo "$result" | jq -r '.manifests[].platform.architecture')
+        if [[ $arches ]]; then
+            echo "[INFO] Found ${this_containerURL} (arches = "$arches")"
         fi
+        containerExists=1
+    else
+        # echo "[INFO] Did not find ${this_containerURL}"
+        containerExists=0
     fi
 }
 

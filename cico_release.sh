@@ -132,7 +132,7 @@ releaseWorkspaceLoader() {
 # check for build errors, since we're using set +e above to NOT fail the build for Nexus problems
 checkLogForErrors () {
     tmplog="$1"
-    errors_in_log="$(grep -E "FAILURE \[|BUILD FAILURE|Failed to execute goal" $tmplog)"
+    errors_in_log="$(grep -E "FAILURE \[|BUILD FAILURE|Failed to execute goal" $tmplog || true)"
     if [[ ${errors_in_log} ]]; then
         echo "${errors_in_log}"
         exit 1

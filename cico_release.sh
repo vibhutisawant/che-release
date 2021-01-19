@@ -467,7 +467,7 @@ updateImageTagsInCheServer() {
     cd che
     git checkout ${BRANCH}
     cd .ci
-    ./set_tag_version_images_linux.sh ${CHE_VERSION}
+    ./set_tag_version_images.sh ${CHE_VERSION}
     cd ..
     git commit -asm "Set ${CHE_VERSION} release image tags"
     git push origin ${BRANCH}
@@ -508,7 +508,7 @@ prepareRelease() {
 
         # TODO more elegant way to execute these scripts
         pushd .ci >/dev/null
-            ./set_tag_version_images_linux.sh ${CHE_VERSION}
+            ./set_tag_version_images.sh ${CHE_VERSION}
             echo "[INFO] Tag versions of images have been set in che-server"
         popd >/dev/null
     popd >/dev/null

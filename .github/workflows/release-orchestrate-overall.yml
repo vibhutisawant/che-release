@@ -55,6 +55,11 @@ jobs:
           # want >=5
           bash --version
 
+          java -version
+          which java
+          javac -version
+          which javac
+
           wget -nv "https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz"
           sudo tar -xzvf openjdk-11.0.2_linux-x64_bin.tar.gz
           sudo mv jdk-11.0.2 /usr/lib/jvm/

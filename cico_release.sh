@@ -197,6 +197,7 @@ releaseCheServer() {
     pushd che >/dev/null
     rm -f $tmpmvnlog || true
     set +e
+    mvn enforcer:display-info
     mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE | tee $tmpmvnlog
     EXIT_CODE=$?
     set -e

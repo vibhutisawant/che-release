@@ -647,6 +647,3 @@ fi
 wait
 
 # Next steps documented in https://github.com/eclipse/che-release/blob/master/README.md#phase-2---manual-steps
-
-git clone git@github.com:eclipse/che
-echoJavaInfo

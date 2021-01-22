@@ -34,6 +34,11 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.6
+        - uses: actions/setup-java@v1
+        with:
+          java-version: '11.0.7'
+          java-package: jdk
+          architecture: x64 
       - name: Set up environment
         run: |
           python -m pip install --upgrade pip
@@ -43,7 +48,6 @@ jobs:
           yq --version
 
           # install more repos
-          sudo add-apt-repository -y ppa:openjdk-r/ppa || true # for jdk11
           sudo apt-get update -y || true
           # install more dependencies
           sudo apt-get -y -q install wget curl bash git 
@@ -54,15 +58,6 @@ jobs:
 
           # want >=5
           bash --version
-
-          java -version
-          which java
-          javac -version
-          which javac
-
-          wget -nv "https://github.com/AdoptOpenJDK/openjdk11-upstream-binaries/releases/download/jdk-11.0.10%2B9/OpenJDK11U-jdk_x64_linux_11.0.10_9.tar.gz"
-          sudo tar -xzvf OpenJDK11U-jdk_x64_linux_11.0.10_9.tar.gz
-          sudo mv jdk-11.0.2 /usr/lib/jvm/
 
           java -version
           which java

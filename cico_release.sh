@@ -81,6 +81,11 @@ installDebDeps(){
     sudo apt-get install -y nodejs
 }
 
+setupJavaVariables() {
+    export JAVA_HOME="/usr/lib/jvm/jdk-11.0.2"
+    export PATH="$JAVA_HOME/bin:$PATH"
+}
+
 installMaven(){
     set -x
     mkdir -p /opt/apache-maven && curl -sSL https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz | tar -xz --strip=1 -C /opt/apache-maven
@@ -553,6 +558,7 @@ if [[ $1 == "ubuntu" ]]; then
     installDebDeps
     set -x
     setupGitconfig
+    setupJavaVariables
     # TODO: shouldn't need to do this if using GH action to log in
     # loginToRegistries
 else

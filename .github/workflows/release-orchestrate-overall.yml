@@ -55,11 +55,13 @@ jobs:
           # want >=5
           bash --version
 
-          wget "https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz"
+          wget -nv "https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz"
           sudo tar -xzvf openjdk-11.0.2_linux-x64_bin.tar.gz
           sudo mv jdk-11.0.2 /usr/lib/jvm/
           export JAVA_HOME="/usr/lib/jvm/jdk-11.0.2"
           export PATH="$JAVA_HOME/bin:$PATH"
+          sudo update-alternatives --install "/usr/bin/java" "java" "/usr/lib/jvm/jdk-11.0.2/bin/java" 1
+          sudo update-alternatives --install "/usr/bin/javac" "javac" "/usr/lib/jvm/jdk-11.0.2/bin/javac" 1
 
           java -version
           which java

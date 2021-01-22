@@ -197,7 +197,6 @@ releaseCheServer() {
     pushd che >/dev/null
     rm -f $tmpmvnlog || true
     set +e
-    mvn enforcer:display-info
     mvn clean install -U -Pcodenvy-release -Dgpg.passphrase=$CHE_OSS_SONATYPE_PASSPHRASE | tee $tmpmvnlog
     EXIT_CODE=$?
     set -e
@@ -535,6 +534,16 @@ bumpVersions() {
     bumpVersion ${NEXTVERSION_Z} ${BRANCH}
 }
 
+echoJavaInfo() {
+    cd che
+    echo "---- JAVA DEBUG INFO ----"
+    mvn enforcer:display-info
+    echo "---- JAVA VERSION ---"
+    javac -version
+    which javac
+    cd ..
+}
+
 if [[ $1 == "ubuntu" ]]; then
     # TODO make this work for GH action - where do we get NPM_AUTH_TOKEN ?
     loadJenkinsVars
@@ -610,6 +619,7 @@ if [[ ${PHASES} == *"5"* ]]; then
     checkoutProjects
     prepareRelease
     createTags
+    echoJavaInfo
     releaseCheServer
 fi
 

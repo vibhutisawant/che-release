@@ -625,7 +625,6 @@ if [[ ${PHASES} == *"5"* ]]; then
     checkoutProjects
     prepareRelease
     createTags
-    echoJavaInfo
     releaseCheServer
 fi
 

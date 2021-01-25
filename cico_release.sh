@@ -620,7 +620,7 @@ if [[ ${PHASES} == *"5"* ]]; then
     cd che
     git checkout 7.25.0
     cd ..
-    releaseCheServer
+    #releaseCheServer
 fi
 
 # Release Che images - see DOCKER_FILES_LOCATIONS for array of images to build

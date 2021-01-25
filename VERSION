@@ -5,7 +5,7 @@ RELEASE_CHE_PARENT=false
 # version of Che parent to use in maven builds
 VERSION_CHE_PARENT=7.15.0
 # if true, deploy che artifacts (parent, server) to Nexus.
-DEPLOY_TO_NEXUS=true
+DEPLOY_TO_NEXUS=false
 # if true, automatically release che-server on Nexus. If false, manual release required
 AUTORELEASE_ON_NEXUS=true
 # list of comma-separated phases to perform; default should be "1,2,3,4,5,6,7"

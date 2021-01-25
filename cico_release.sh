@@ -617,8 +617,9 @@ fi
 set +x
 if [[ ${PHASES} == *"5"* ]]; then
     checkoutProjects
-    prepareRelease
-    createTags
+    cd che
+    git checkout 7.25.0
+    cd ..
     releaseCheServer
 fi
 

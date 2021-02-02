@@ -8,13 +8,6 @@ function die_with()
 	exit 1
 }
 
-releaseCheWorkspaceLoader()
-{
-    echo "1 second"
-    sleep 3
-    echo "3 seconds"
-    die_with "dead"
-}
 
 verifyContainerExistsWithTimeout()
 {

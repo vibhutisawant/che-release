@@ -59,11 +59,6 @@ jobs:
           # want >=5
           bash --version
 
-          java -version
-          which java
-          javac -version
-          which javac
-
           # do we need any of these?
           # docker-ce          x86_64  3:19.03.14-3.el7            docker-ce-stable   24 M
           # gcc-c++            x86_64  4.8.5-44.el7                base              7.2 M
@@ -77,12 +72,6 @@ jobs:
           PHASES="${{ github.event.inputs.phases }}"
           echo "PHASES=${PHASES}"
           sed -i VERSION -r -e "s#PHASES=.*#PHASES=${PHASES}#"
-
-          export CHE_MAVEN_SETTINGS=${{ secrets.CHE_MAVEN_SETTINGS}}
-          export CHE_OSS_SONATYPE_GPG_KEY=${{ secrets.CHE_OSS_SONATYPE_GPG_KEY}}
-          export CHE_OSS_SONATYPE_PASSPHRASE=${{ secrets.CHE_OSS_SONATYPE_PASSPHRASE}}
-          export CHE_GITHUB_SSH_KEY=${{ secrets.CHE_GITHUB_SSH_KEY}}
-          export CHE_NPM_AUTH_TOKEN=${{ secrets.CHE_NPM_AUTH_TOKEN}}
 
           export QUAY_ECLIPSE_CHE_USERNAME=${{ secrets.QUAY_USERNAME }}
           export QUAY_ECLIPSE_CHE_PASSWORD=${{ secrets.QUAY_PASSWORD }}

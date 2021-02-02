@@ -110,28 +110,62 @@ evaluateCheVariables() {
     echo "Release Process Phases: '${PHASES}'"
 }
 
-releaseCheDocs() {
-    tmpdir="$(mktemp -d)"
-    pushd "${tmpdir}" >/dev/null || exit
-    projectPath=eclipse/che-docs
-    rm -f ./make-release.sh && curl -sSLO "https://raw.githubusercontent.com/${projectPath}/master/make-release.sh" && chmod +x ./make-release.sh
-    ./make-release.sh --repo "git@github.com:${projectPath}" --version "${CHE_VERSION}" --trigger-release
-    popd >/dev/null || exit 
+# che docs release now depends on che-operator completion.
+# issue: https://github.com/eclipse/che/issues/18864
+# see https://github.com/eclipse/che-docs/pull/1823
+# see https://github.com/eclipse/che-operator/pull/657
+# releaseCheDocs() {
+#     tmpdir="$(mktemp -d)"
+#     pushd "${tmpdir}" >/dev/null || exit
+#     projectPath=eclipse/che-docs
+#     rm -f ./make-release.sh && curl -sSLO "https://raw.githubusercontent.com/${projectPath}/master/make-release.sh" && chmod +x ./make-release.sh
+#     ./make-release.sh --repo "git@github.com:${projectPath}" --version "${CHE_VERSION}" --trigger-release
+#     popd >/dev/null || exit 
+# }
+
+# for a given GH repo and action name, compute workflow_id
+# warning: variable workflow_id is a global, so don't call this in parallel executions!
+computeWorkflowId() {
+    this_repo=$1
+    this_action_name=$2
+    workflow_id=$(curl -sSL https://api.github.com/repos/${this_repo}/actions/workflows -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" | jq --arg search_field "${this_action_name}" '.workflows[] | select(.name == $search_field).id'); # echo "workflow_id = $workflow_id"
+    if [[ ! $workflow_id ]]; then
+        die_with "[ERROR] Could not compute workflow id from https://api.github.com/repos/${this_repo}/actions/workflows - check your GITHUB_TOKEN is active"
+    fi
+    # echo "[INFO] Got workflow_id $workflow_id for $this_repo action '$this_action_name'"
 }
 
-releaseDashboard() {
-    echo "[INFO] Invoke che-dashboard release action: https://github.com/eclipse/che-dashboard/actions?query=workflow%3A%22Release+Che+Dashboard%22"
-    curl https://api.github.com/repos/eclipse/che-dashboard/actions/workflows/3152474/dispatches -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"version\":\"${CHE_VERSION}\"} }"
+# generic method to call a GH action and pass in a single var=val parameter 
+invokeAction() {
+    this_repo=$1
+    this_action_name=$2
+    this_workflow_id=$3
+    this_var=$4
+    this_val=$5
+
+    # if provided, use previously computed workflow_id; otherwise compute it from the action's name so we can invoke the GH action by id
+    if [[ $this_workflow_id ]]; then
+        workflow_id=$this_workflow_id
+    else
+        computeWorkflowId $this_repo "$this_action_name"
+        # now we have a global value for $workflow_id
+    fi
+    curl -sSL https://api.github.com/repos/${this_repo}/actions/workflows/${workflow_id}/dispatches -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"${this_var}\":\"${this_val}\"} }" || die_with "[ERROR] Problem invoking action https://github.com/${this_repo}/actions?query=workflow%3A%22${this_action_name// /+}%22"
+    echo "[INFO] Invoked '${this_action_name}' action ($workflow_id) - see https://github.com/${this_repo}/actions?query=workflow%3A%22${this_action_name// /+}%22"
 }
 
-releaseWorkspaceLoader() {
-    echo "[INFO] Invoke che-workspace-loader release action: https://github.com/eclipse/che-workspace-loader/actions?query=workflow%3A%22Release+Che+Workspace+Loader%22"
-    curl https://api.github.com/repos/eclipse/che-workspace-loader/actions/workflows/3543888/dispatches -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"version\":\"${CHE_VERSION}\"} }"
+branchJWTProxyAndKIP() {
+    invokeAction eclipse/che-jwtproxy "Create branch" "5410230" branch "${BRANCH}"
+    invokeAction che-incubator/kubernetes-image-puller "Create branch" "5409996" branch "${BRANCH}"
+}
+
+releaseDashboardAndWorkspaceLoader() {
+    invokeAction eclipse/che-dashboard "Release Che Dashboard" "3152474" version "${CHE_VERSION}"
+    invokeAction eclipse/che-workspace-loader "Release Che Workspace Loader" "3543888" version "${CHE_VERSION}"
 }
 
 releaseOperator() {
-    echo "[INFO] Invoke che-operator release action: https://github.com/eclipse/che-operator/actions?query=workflow%3Arelease"
-    curl https://api.github.com/repos/eclipse/che-operator/actions/workflows/3593082/dispatches -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"version\":\"${CHE_VERSION}\"} }"
+    invokeAction eclipse/che-operator "Release Che Operator" "3593082" version "${CHE_VERSION}"
 }
 
 # check for build errors, since we're using set +e above to NOT fail the build for Nexus problems
@@ -592,19 +626,18 @@ fi
 wait
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 30
 
-# Release dashboard and workspace loader
+# Release dashboard and workspace loader in series, via GH Action
 set +x
 if [[ ${PHASES} == *"3"* ]]; then
-    releaseDashboard
-    releaseWorkspaceLoader
+    releaseDashboardAndWorkspaceLoader
 fi
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 30
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 30
 
-# Release of Che docs does not depend on server, so trigger and don't wait
+# Create branches for JWT Proxy and Kubernetes Image Puller in series, via GH action
 set +x
 if [[ ${PHASES} == *"4"* ]]; then
-    releaseCheDocs &
+    branchJWTProxyAndKIP
 fi
 
 set +x

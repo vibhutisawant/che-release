@@ -98,7 +98,7 @@ invokeAction() {
         computeWorkflowId $this_repo "$this_action_name"
         # now we have a global value for $workflow_id
     fi
-    if [[ $this_repo == "che-incubator*"]]; then
+    if [[ ${this_repo} == "che-incubator"* ]]; then
         this_github_token=${CHE_INCUBATOR_BOT_GITHUB_TOKEN}
     else
         this_github_token=${GITHUB_TOKEN}

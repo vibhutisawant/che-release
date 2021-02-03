@@ -99,6 +99,10 @@ invokeAction() {
     echo "[INFO] Invoked '${this_action_name}' action ($workflow_id) - see https://github.com/${this_repo}/actions?query=workflow%3A%22${this_action_name// /+}%22"
 }
 
+releaseMachineExec() {
+    invokeAction eclipse/che-machine-exec "Release Che Machine Exec" "5149341" version "${CHE_VERSION}"
+}
+
 branchJWTProxyAndKIP() {
     invokeAction eclipse/che-jwtproxy "Create branch" "5410230" branch "${BRANCH}"
     invokeAction che-incubator/kubernetes-image-puller "Create branch" "5409996" branch "${BRANCH}"
@@ -128,10 +132,14 @@ setupGitconfig() {
   export GITHUB_TOKEN="${CHE_BOT_GITHUB_TOKEN}"
 }
 
+set +x
 mkdir $HOME/.ssh/
-loadMvnSettingsGpgKey
-installDebDeps
+echo $CHE_GITHUB_SSH_KEY | base64 -d > $HOME/.ssh/id_rsa
+chmod 0400 $HOME/.ssh/id_rsa
+ssh-keyscan github.com >> ~/.ssh/known_hosts
 set -x
+
+installDebDeps
 setupGitconfig
 
 evaluateCheVariables
@@ -141,8 +149,8 @@ set -e
 # Release che-theia, machine-exec and devfile-registry
 set +x
 if [[ ${PHASES} == *"1"* ]]; then
+    releaseMachineExec
     { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
-    { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-machine-exec     devtools-che-machine-exec-release     60 & }; pid_2=$!;
     # TODO switch to GH action https://github.com/eclipse/che-devfile-registry/pull/309 + need secrets 
     { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
 fi

@@ -98,7 +98,13 @@ invokeAction() {
         computeWorkflowId $this_repo "$this_action_name"
         # now we have a global value for $workflow_id
     fi
-    curl -sSL https://api.github.com/repos/${this_repo}/actions/workflows/${workflow_id}/dispatches -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"${this_var}\":\"${this_val}\"} }" || die_with "[ERROR] Problem invoking action https://github.com/${this_repo}/actions?query=workflow%3A%22${this_action_name// /+}%22"
+    if [[ $this_repo == "che-incubator*"]]; then
+        this_github_token=${CHE_INCUBATOR_BOT_GITHUB_TOKEN}
+    else
+        this_github_token=${GITHUB_TOKEN}
+    fi
+
+    curl -sSL https://api.github.com/repos/${this_repo}/actions/workflows/${workflow_id}/dispatches -X POST -H "Authorization: token ${this_github_token}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"${this_var}\":\"${this_val}\"} }" || die_with "[ERROR] Problem invoking action https://github.com/${this_repo}/actions?query=workflow%3A%22${this_action_name// /+}%22"
     echo "[INFO] Invoked '${this_action_name}' action ($workflow_id) - see https://github.com/${this_repo}/actions?query=workflow%3A%22${this_action_name// /+}%22"
 }
 
@@ -117,7 +123,7 @@ releaseDashboardAndWorkspaceLoader() {
 }
 
 releaseCheServer() {
-    invokeAction eclipse/che-server "Release Che Server" "REPLACE_WITH_REAL_ID" version "${CHE_VERSION}"
+    invokeAction eclipse/che-server "Release Che Server" "5536792" version "${CHE_VERSION}"
 }
 
 releaseOperator() {

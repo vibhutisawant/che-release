@@ -128,25 +128,11 @@ setupGitconfig() {
   export GITHUB_TOKEN="${CHE_BOT_GITHUB_TOKEN}"
 }
 
-if [[ $1 == "ubuntu" ]]; then
-    # TODO make this work for GH action - where do we get NPM_AUTH_TOKEN ?
-    loadJenkinsVars
-    # TODO make this work for GH action
-    mkdir $HOME/.ssh/
-    loadMvnSettingsGpgKey
-    installDebDeps
-    set -x
-    setupGitconfig
-    # TODO: shouldn't need to do this if using GH action to log in
-    # loginToRegistries
-else
-    loadJenkinsVars
-    loadMvnSettingsGpgKey
-    installRPMDeps
-    set -x
-    setupGitconfig
-    loginToRegistries
-fi
+mkdir $HOME/.ssh/
+loadMvnSettingsGpgKey
+installDebDeps
+set -x
+setupGitconfig
 
 evaluateCheVariables
 echo "BASH VERSION = $BASH_VERSION"

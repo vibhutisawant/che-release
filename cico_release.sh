@@ -3,6 +3,9 @@
 #include common scripts
 . ./cico_common.sh
 
+REGISTRY="quay.io"
+ORGANIZATION="eclipse"
+
 installRPMDeps(){
     set +x
     # enable epel and update to latest; update to git 2.24 via https://repo.ius.io/7/x86_64/packages/g/

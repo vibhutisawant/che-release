@@ -138,6 +138,12 @@ setupGitconfig() {
 
   # hub CLI configuration
   git config --global push.default matching
+
+  # suppress warnings about how to reconcile divergent branches
+  git config --global pull.ff only 
+
+  # NOTE when invoking action from che-incubator/* repos (not eclipse/che* repos), must use CHE_INCUBATOR_BOT_GITHUB_TOKEN
+  # default to CHE_BOT GH token
   export GITHUB_TOKEN="${CHE_BOT_GITHUB_TOKEN}"
 }
 

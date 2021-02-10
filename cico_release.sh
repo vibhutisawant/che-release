@@ -165,9 +165,11 @@ set -e
 set +x
 if [[ ${PHASES} == *"1"* ]]; then
     releaseMachineExec
-    { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-theia            devtools-che-theia-che-release        90 & }; pid_1=$!;
     # TODO switch to GH action https://github.com/eclipse/che-devfile-registry/pull/309 + need secrets 
     { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
+    releaseDashboardAndWorkspaceLoader
+    branchJWTProxyAndKIP
+
 fi
 wait
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 30
@@ -175,39 +177,26 @@ verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registr
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 30
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 30
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 30
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 30
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 30
 
 # Release plugin-registry (depends on che-theia and machine-exec)
 set +x
 if [[ ${PHASES} == *"2"* ]]; then
     # TODO switch to GH action https://github.com/eclipse/che-plugin-registry/pull/723 + need secrets 
     { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
+    releaseCheServer
 fi
 wait
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 30
-
-# Release dashboard and workspace loader in series, via GH Action
-set +x
-if [[ ${PHASES} == *"3"* ]]; then
-    releaseDashboardAndWorkspaceLoader
-fi
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 30
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 30
-
-# Create branches for JWT Proxy and Kubernetes Image Puller in series, via GH action
-set +x
-if [[ ${PHASES} == *"4"* ]]; then
-    branchJWTProxyAndKIP
-fi
-
-# Release Che server to Maven central (depends on dashboard and workspace loader)
-set +x
-if [[ ${PHASES} == *"5"* ]]; then
-    releaseCheServer
-fi
+# verify images all created from IMAGES_LIST
+for image in ${IMAGES_LIST[@]}; do
+    verifyContainerExistsWithTimeout ${image}:${CHE_VERSION} 60
+done
 
 # Release Che operator (create PRs)
 set +x
-if [[ ${PHASES} == *"6"* ]]; then
+if [[ ${PHASES} == *"3"* ]]; then
     releaseOperator
 fi
 

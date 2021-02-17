@@ -112,6 +112,10 @@ releaseMachineExec() {
     invokeAction eclipse/che-machine-exec "Release Che Machine Exec" "5149341" version "${CHE_VERSION}"
 }
 
+releaseCheTheia() {
+    invokeAction eclipse/che-theia "Release Che Theia" "5717988" version "${CHE_VERSION}"
+}
+
 branchJWTProxyAndKIP() {
     invokeAction eclipse/che-jwtproxy "Create branch" "5410230" branch "${BRANCH}"
     invokeAction che-incubator/kubernetes-image-puller "Create branch" "5409996" branch "${BRANCH}"
@@ -165,6 +169,7 @@ set -e
 set +x
 if [[ ${PHASES} == *"1"* ]]; then
     releaseMachineExec
+    releaseCheTheia
     # TODO switch to GH action https://github.com/eclipse/che-devfile-registry/pull/309 + need secrets 
     { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
     releaseDashboardAndWorkspaceLoader
@@ -185,14 +190,14 @@ set +x
 if [[ ${PHASES} == *"2"* ]]; then
     # TODO switch to GH action https://github.com/eclipse/che-plugin-registry/pull/723 + need secrets 
     { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
-    # releaseCheServer
+    releaseCheServer
 fi
 wait
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 30
 # verify images all created from IMAGES_LIST
-# for image in ${IMAGES_LIST[@]}; do
-#     verifyContainerExistsWithTimeout ${image}:${CHE_VERSION} 60
-# done
+for image in ${IMAGES_LIST[@]}; do
+    verifyContainerExistsWithTimeout ${image}:${CHE_VERSION} 60
+done
 
 # Release Che operator (create PRs)
 set +x

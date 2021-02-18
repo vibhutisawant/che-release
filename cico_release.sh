@@ -164,11 +164,11 @@ set -e
 # Release che-theia, machine-exec and devfile-registry
 set +x
 if [[ ${PHASES} == *"1"* ]]; then
-    releaseMachineExec
-    # TODO switch to GH action https://github.com/eclipse/che-devfile-registry/pull/309 + need secrets 
-    { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
-    releaseDashboardAndWorkspaceLoader
-    branchJWTProxyAndKIP
+    # releaseMachineExec
+    # # TODO switch to GH action https://github.com/eclipse/che-devfile-registry/pull/309 + need secrets 
+    # { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
+    # releaseDashboardAndWorkspaceLoader
+    # branchJWTProxyAndKIP
 
 fi
 wait

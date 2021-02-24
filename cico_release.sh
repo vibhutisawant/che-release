@@ -190,14 +190,14 @@ set +x
 if [[ ${PHASES} == *"2"* ]]; then
     # TODO switch to GH action https://github.com/eclipse/che-plugin-registry/pull/723 + need secrets 
     { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
-    releaseCheServer
+    #releaseCheServer
 fi
 wait
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 30
-# verify images all created from IMAGES_LIST
-for image in ${IMAGES_LIST[@]}; do
-    verifyContainerExistsWithTimeout ${image}:${CHE_VERSION} 60
-done
+# # verify images all created from IMAGES_LIST
+# for image in ${IMAGES_LIST[@]}; do
+#     verifyContainerExistsWithTimeout ${image}:${CHE_VERSION} 60
+# done
 
 # Release Che operator (create PRs)
 set +x

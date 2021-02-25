@@ -7,127 +7,18 @@ on:
         description: 'The version that is going to be released. Should be in format 7.y.z'
         required: true
         default: ''
+
 jobs:
-  release-che-theia:
+  test-release:
+    runs-on: ubuntu-16.04
     steps:
-    - uses: che-incubator/trigger-workflow-action@main
+    - uses: mkuznyetsov/trigger-workflow-action@next
       with:
-        repo: eclipse/che-theia
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        workflow_id: "5717988"
-        workflow_name: "Release Che Theia"
-        parameters: "{\"version\":\${{ github.event.inputs.version }}"\"}"
-        wait_interval: "120"
-        wait_initial_delay: "20"
-        
-  release-che-machine-exec:
-    steps:
-    - uses: che-incubator/trigger-workflow-action@main
-      with:
-        repo: eclipse/che-machine-exec
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        workflow_id: "5149341"
-        workflow_name: "Release Che Machine Exec"
-        parameters: "{\"version\":\${{ github.event.inputs.version }}"\"}"
-        wait_interval: "120"
-        wait_initial_delay: "20"
-        
-        
-  release-che-jwtproxy:
-    steps:
-    - uses: che-incubator/trigger-workflow-action@main
-      with:
-        repo: eclipse/che-machine-exec
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        workflow_id: "5149341"
-        workflow_name: "Release Che Machine Exec"
-        parameters: "{\"branch\":\${{ github.event.inputs.version }}"\"}"
-        wait_interval: "120"
-        wait_initial_delay: "5"
-
-  release-kubernetes-image-puller:
-    steps:
-    - uses: che-incubator/trigger-workflow-action@main
-      with:
-        repo: eclipse/che-machine-exec
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        workflow_id: "5149341"
-        workflow_name: "Release Che Machine Exec"
-        parameters: "{\"branch\":\${{ github.event.inputs.version }}"\"}"
-        wait_interval: "120"
-        wait_initial_delay: "5"
-        
-  release-che-devfile-regisrty:
-    steps:
-    - uses: che-incubator/trigger-workflow-action@main
-      with:
-        repo: eclipse/che-devfile-registry
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        workflow_id: "5149341"
-        workflow_name: "Release Che Devfile Registry"
-        parameters: "{\"branch\":\${{ github.event.inputs.version }}"\"}"
-        wait_interval: "120"
-        wait_initial_delay: "30"
-        
-  release-che-plugin-registry:
-    needs: [release-che-theia, release-che-machine-exec]
-    steps:
-    - uses: che-incubator/trigger-workflow-action@main
-      with:
-        repo: eclipse/che-plugin-registry
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        workflow_id: "5149341"
-        workflow_name: "Release Che Plugin Registry"
-        parameters: "{\"branch\":\${{ github.event.inputs.version }}"\"}"
-        wait_interval: "120"
-        wait_initial_delay: "20"
-        
-  release-che-dashboard:
-    steps:
-    - uses: che-incubator/trigger-workflow-action@main
-      with:
-        repo: eclipse/che-dashboard
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        workflow_id: "3152474"
-        workflow_name: "Release Che Dashboard"
-        parameters: "{\"branch\":\${{ github.event.inputs.version }}"\"}"
-        wait_interval: "120"
-        wait_initial_delay: "20"
-        
-  release-che-workspace-loader:
-    - uses: che-incubator/trigger-workflow-action@main
-      with:
-        repo: eclipse/che-workspace-loader
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        workflow_id: "3543888"
-        workflow_name: "Release Che Workspace Loader"
-        parameters: "{\"branch\":\${{ github.event.inputs.version }}"\"}"
-        wait_interval: "120"
-        wait_initial_delay: "20"
-
-  release-che-server:
-    needs: [release-che-dashboard, release-che-workspace-loader]
-    steps:
-    - uses: che-incubator/trigger-workflow-action@main
-      with:
-        repo: eclipse/che
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        workflow_id: "5536792"
-        workflow_name: "Release Che Server"
-        parameters: "{\"branch\":\${{ github.event.inputs.version }}"\"}"
-        wait_interval: "120"
-        wait_initial_delay: "40"
-
-  release-che-operator:
-    needs: release-che-server
-    steps:
-    - uses: che-incubator/trigger-workflow-action@main
-      with:
-        repo: eclipse/che-operator
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        workflow_id: "3593082"
-        workflow_name: "Release Che Operator"
-        parameters: "{\"branch\":\${{ github.event.inputs.version }}"\"}"
-        wait_interval: "120"
-        wait_initial_delay: "40"
-        
+        owner: eclipse
+        repo: che-release
+        github_token: ${{ secrets.CHE_BOT_GITHUB_TOKEN }}
+        workflow_id: "4300579"
+        workflow_name: "Release - Orchestrate Overall Release Phases"
+        version: "${{ github.event.inputs.version }}"
+        wait_interval: "2"
+        wait_timeout: "20"

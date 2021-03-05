@@ -1,0 +1,28 @@
+# This Workflow announces a release in Eclipse Mattermost to https://mattermost.eclipse.org/eclipse/channels/eclipse-che-releases
+name: Release - Send announcement to https://mattermost.eclipse.org/eclipse/channels/eclipse-che-releases
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The version that is going to be announced. Should be in format 7.y.z'
+        required: true
+        default: ''
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Setup env vars
+      id: ENVS
+      run: |
+        echo "::set-output name=base_version::${version%.*}" 
+    - name: Create Mattermost message
+      run: |
+        echo "{\"text\":\"Che ${{ github.event.inputs.version }} has been released. Please resolve or move unresolved issues assigned to this milestone: https://github.com/eclipse/che/milestones/${{ steps.ENVS.outputs.base_version }}\"}" > mattermost.json
+    - name: Send Mattermost message
+      uses: mattermost/action-mattermost-notify@master
+      env:
+        MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
+        MATTERMOST_CHANNEL: eclipse-che-releases
+        MATTERMOST_ICON: che-logo
+        MATTERMOST_USERNAME: nboldt
+

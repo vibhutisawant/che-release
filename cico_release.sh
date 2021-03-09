@@ -105,10 +105,10 @@ releaseCheTheia() {
 }
 
 releaseDevfileRegistry() {
-    invokeAction eclipse/che-theia "Release Che Devfile Registry" "4191260" version "${CHE_VERSION}"
+    invokeAction eclipse/che-devfile-registry "Release Che Devfile Registry" "4191260" version "${CHE_VERSION}"
 }
 releasePluginRegistry() {
-    invokeAction eclipse/che-theia "Release Che Plugin Registry" "4191251" version "${CHE_VERSION}"
+    invokeAction eclipse/che-plugin-registry "Release Che Plugin Registry" "4191251" version "${CHE_VERSION}"
 }
 
 branchJWTProxyAndKIP() {
@@ -187,10 +187,10 @@ if [[ ${PHASES} == *"3"* ]]; then
     releaseCheServer
 fi
 wait
-if [[ ${PHASES} == *"2"* ]]; then
+if [[ ${PHASES} == *"2"* ]] || [[ ${PHASES} == *"3"* ]] || [[ ${PHASES} == *"4"* ]]; then
   verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 30
 fi
-if [[ ${PHASES} == *"3"* ]]; then
+if [[ ${PHASES} == *"3"* ]] || [[ ${PHASES} == *"4"* ]]; then
     # verify images all created from IMAGES_LIST
     for image in ${IMAGES_LIST[@]}; do
         verifyContainerExistsWithTimeout ${image}:${CHE_VERSION} 60

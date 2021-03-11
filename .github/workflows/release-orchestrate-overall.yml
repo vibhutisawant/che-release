@@ -8,9 +8,9 @@ on:
         required: true
         default: ''
       phases:
-        description: 'List of comma-separated phases to perform; default should be "1,2,3,4,5,6,7"; omit phases that have successfully run'
+        description: 'List of comma-separated phases to perform; default should be "1,2,3,4"; omit phases that have successfully run'
         required: true
-        default: '1,2,3,4,5,6,7'
+        default: '1,2,3,4'
 jobs:
   build:
     runs-on: ubuntu-16.04

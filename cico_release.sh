@@ -17,6 +17,7 @@ installRPMDeps(){
     subscription-manager repos --enable=rhel-server-rhscl-7-rpms || true
     yum update -y -q 
     # TODO should this be node 12 module?
+    # TODO remove skopeo and yq -- are they still used?
     yum install -y -q git224-all skopeo java-11-openjdk-devel yum-utils device-mapper-persistent-data lvm2 docker-ce nodejs yarn gcc-c++ make jq hub python3-pip wget yq podman psmisc
     echo -n "node "; node --version
     echo -n "npm "; npm --version
@@ -57,19 +58,6 @@ evaluateCheVariables() {
     echo "Autorelease on nexus: ${AUTORELEASE_ON_NEXUS}"
     echo "Release Process Phases: '${PHASES}'"
 }
-
-# che docs release now depends on che-operator completion.
-# issue: https://github.com/eclipse/che/issues/18864
-# see https://github.com/eclipse/che-docs/pull/1823
-# see https://github.com/eclipse/che-operator/pull/657
-# releaseCheDocs() {
-#     tmpdir="$(mktemp -d)"
-#     pushd "${tmpdir}" >/dev/null || exit
-#     projectPath=eclipse/che-docs
-#     rm -f ./make-release.sh && curl -sSLO "https://raw.githubusercontent.com/${projectPath}/master/make-release.sh" && chmod +x ./make-release.sh
-#     ./make-release.sh --repo "git@github.com:${projectPath}" --version "${CHE_VERSION}" --trigger-release
-#     popd >/dev/null || exit 
-# }
 
 # for a given GH repo and action name, compute workflow_id
 # warning: variable workflow_id is a global, so don't call this in parallel executions!
@@ -114,6 +102,13 @@ releaseMachineExec() {
 
 releaseCheTheia() {
     invokeAction eclipse/che-theia "Release Che Theia" "5717988" version "${CHE_VERSION}"
+}
+
+releaseDevfileRegistry() {
+    invokeAction eclipse/che-devfile-registry "Release Che Devfile Registry" "4191260" version "${CHE_VERSION}"
+}
+releasePluginRegistry() {
+    invokeAction eclipse/che-plugin-registry "Release Che Plugin Registry" "4191251" version "${CHE_VERSION}"
 }
 
 branchJWTProxyAndKIP() {
@@ -170,11 +165,9 @@ set +x
 if [[ ${PHASES} == *"1"* ]]; then
     releaseMachineExec
     releaseCheTheia
-    # TODO switch to GH action https://github.com/eclipse/che-devfile-registry/pull/309 + need secrets 
-    { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-devfile-registry devtools-che-devfile-registry-release 75 & }; pid_3=$!;
+    releaseDevfileRegistry
     releaseDashboardAndWorkspaceLoader
     branchJWTProxyAndKIP
-
 fi
 wait
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 30
@@ -188,24 +181,27 @@ verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loade
 # Release plugin-registry (depends on che-theia and machine-exec)
 set +x
 if [[ ${PHASES} == *"2"* ]]; then
-    # TODO switch to GH action https://github.com/eclipse/che-plugin-registry/pull/723 + need secrets 
-    { ./cico_release_theia_and_registries.sh ${CHE_VERSION} eclipse/che-plugin-registry  devtools-che-plugin-registry-release  45 & }; pid_4=$!;
-    #releaseCheServer
+    releasePluginRegistry
+fi
+if [[ ${PHASES} == *"3"* ]]; then
+    releaseCheServer
 fi
 wait
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 30
-# # verify images all created from IMAGES_LIST
-# for image in ${IMAGES_LIST[@]}; do
-#     verifyContainerExistsWithTimeout ${image}:${CHE_VERSION} 60
-# done
+if [[ ${PHASES} == *"2"* ]] || [[ ${PHASES} == *"3"* ]] || [[ ${PHASES} == *"4"* ]]; then
+  verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 30
+fi
+if [[ ${PHASES} == *"3"* ]] || [[ ${PHASES} == *"4"* ]]; then
+    # verify images all created from IMAGES_LIST
+    for image in ${IMAGES_LIST[@]}; do
+        verifyContainerExistsWithTimeout ${image}:${CHE_VERSION} 60
+    done
+fi
 
 # Release Che operator (create PRs)
 set +x
-if [[ ${PHASES} == *"3"* ]]; then
+if [[ ${PHASES} == *"4"* ]]; then
     releaseOperator
 fi
-
-# TODO need a test to validate docs have been published OK
 wait
 
-# Next steps documented in https://github.com/eclipse/che-release/blob/master/README.md#phase-2---manual-steps
+# TODO update to list remaining manual steps (PR merges only) https://github.com/eclipse/che-release/blob/master/README.md#phase-2---manual-steps

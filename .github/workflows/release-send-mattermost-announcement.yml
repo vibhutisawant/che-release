@@ -1,5 +1,5 @@
 # This Workflow announces a release in Eclipse Mattermost to https://mattermost.eclipse.org/eclipse/channels/eclipse-che-releases
-name: Release - Send eclipse-che-releases announcement
+name: Release - Send mattermost notification
 on:
   workflow_dispatch:
     inputs:

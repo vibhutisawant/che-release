@@ -86,7 +86,7 @@ invokeAction() {
         computeWorkflowId $this_repo "$this_action_name"
         # now we have a global value for $workflow_id
     fi
-    if [[ ${this_repo} == "che-incubator"* ]]; then
+    if [[ ${this_repo} == "che-incubator"* ]] || [[ ${this_repo} == "devfile"* ]]; then
         this_github_token=${CHE_INCUBATOR_BOT_GITHUB_TOKEN}
     else
         this_github_token=${GITHUB_TOKEN}
@@ -127,6 +127,13 @@ releaseCheServer() {
 
 releaseOperator() {
     invokeAction eclipse-che/che-operator "Release Che Operator" "3593082" version "${CHE_VERSION}"
+}
+
+releaseDwoOperator() {
+    invokeAction devfile/devworkspace-operator "Release DevWorkspace Operator" "6380164" version "${DWO_VERSION}"
+}
+releaseDwoCheOperator() {
+    invokeAction che-incubator/devworkspace-che-operator "Release DevWorkspace Che Operator" "6597719" version "v${CHE_VERSION}"
 }
 
 # TODO change it to someone else?
@@ -186,11 +193,14 @@ fi
 if [[ ${PHASES} == *"3"* ]]; then
     releaseCheServer
 fi
+if [[ ${PHASES} == *"4"* ]]; then
+    releaseDwoCheOperator
+fi
 wait
-if [[ ${PHASES} == *"2"* ]] || [[ ${PHASES} == *"3"* ]] || [[ ${PHASES} == *"4"* ]]; then
+if [[ ${PHASES} == *"2"* ]] || [[ ${PHASES} == *"3"* ]] || [[ ${PHASES} == *"4"* ]] || [[ ${PHASES} == *"5"* ]]; then
   verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 30
 fi
-if [[ ${PHASES} == *"3"* ]] || [[ ${PHASES} == *"4"* ]]; then
+if [[ ${PHASES} == *"3"* ]] || [[ ${PHASES} == *"5"* ]]; then
     # verify images all created from IMAGES_LIST
     for image in ${IMAGES_LIST[@]}; do
         verifyContainerExistsWithTimeout ${image}:${CHE_VERSION} 60
@@ -199,7 +209,7 @@ fi
 
 # Release Che operator (create PRs)
 set +x
-if [[ ${PHASES} == *"4"* ]]; then
+if [[ ${PHASES} == *"5"* ]]; then
     releaseOperator
 fi
 wait

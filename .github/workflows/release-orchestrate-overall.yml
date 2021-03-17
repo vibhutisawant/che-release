@@ -7,10 +7,14 @@ on:
         description: 'The version that is going to be released. Should be in format 7.y.z'
         required: true
         default: ''
+      dwoVersion:
+        description: 'The version of DevWorkspace operator. Should be in format v0.y.z'
+        required: true
+        default: ''
       phases:
         description: 'List of comma-separated phases to perform; default should be "1,2,3,4"; omit phases that have successfully run'
         required: true
-        default: '1,2,3,4'
+        default: '1,2,3,4,5'
 jobs:
   build:
     runs-on: ubuntu-16.04
@@ -67,6 +71,7 @@ jobs:
       - name: Release
         run: |
           CHE_VERSION="${{ github.event.inputs.version }}"
+          DWO_VERSION="${{ github.event.inputs.dwoVersion }}"
           echo "CHE_VERSION=${CHE_VERSION}"
           sed -i VERSION -r -e "s#CHE_VERSION=.*#CHE_VERSION=${CHE_VERSION}#"
           PHASES="${{ github.event.inputs.phases }}"

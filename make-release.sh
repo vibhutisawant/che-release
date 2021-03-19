@@ -65,29 +65,6 @@ verifyContainerExists()
     fi
 }
 
-# TODO make this work, now that we're on newer Bash
-waitForPids() {
-    pstree -p | grep -v grep > out
-    cat out
-
-    procs=$(pstree -p | grep -v grep | grep -E "cico_release_theia_and_registries|cico_release_dashboard_and_workspace_loader" | sed -r -e "s#--# #g")
-    for p in $procs; do p=$(echo "${p}" | tr "|" -d | sed -r -e "s#.*\(([0-9]+)\).*#\1#g" | tr -d "-"); procslist="${procslist} ${p}"; done
-    echo "JOB PIDs RUNNING:
-     ----------
-     $(jobs -rl)
-     $procs
-     ${procslist}
-     ----------
-     "
-     
-    echo "$*"
-     wait $* || {
-         echo  "Exit due to failure; kill running processes"
-         trap "kill ${procslist} 2>/dev/null" EXIT
-     exit 1
-    }
-}
-
 installDebDeps(){
     set +x
     # TODO should this be node 12?

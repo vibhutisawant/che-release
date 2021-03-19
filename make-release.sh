@@ -88,32 +88,6 @@ waitForPids() {
     }
 }
 
-installRPMDeps(){
-    set +x
-    # enable epel and update to latest; update to git 2.24 via https://repo.ius.io/7/x86_64/packages/g/
-    yum remove -y -q git* || true
-    yum install -y -q https://repo.ius.io/ius-release-el7.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm || true
-    yum-config-manager --add-repo https://dl.yarnpkg.com/rpm/yarn.repo
-    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-    yum install -y -q centos-release-scl-rh subscription-manager
-    subscription-manager repos --enable=rhel-server-rhscl-7-rpms || true
-    yum update -y -q 
-    # TODO should this be node 12 module?
-    # TODO remove skopeo and yq -- are they still used?
-    yum install -y -q git224-all skopeo java-11-openjdk-devel yum-utils device-mapper-persistent-data lvm2 docker-ce nodejs yarn gcc-c++ make jq hub python3-pip wget yq podman psmisc
-    echo -n "node "; node --version
-    echo -n "npm "; npm --version
-    echo "Installed Packages" && rpm -qa | sort -V && echo "End Of Installed Packages"
-    git --version || exit 1
-    export JAVA_HOME=/usr/lib/jvm/java-11-openjdk
-    export PATH="/usr/lib/jvm/java-11-openjdk:/usr/bin:${PATH:-/bin:/usr/bin}"
-    export JAVACONFDIRS="/etc/java${JAVACONFDIRS:+:}${JAVACONFDIRS:-}"
-    # TODO should this be node 12?
-    curl -sL https://rpm.nodesource.com/setup_10.x | bash -
-    # start docker daemon
-    service docker start
-}
-
 installDebDeps(){
     set +x
     # TODO should this be node 12?

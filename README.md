@@ -6,13 +6,25 @@ Note that over time, this job, and all the jobs called by it, will be migrated t
 
 # Che release process
 
+## Permissions
+ 
+1. Get push permission from @fbenoit to push applications
+    * https://quay.io/organization/eclipse-che-operator-kubernetes/teams/pushers
+    * https://quay.io/organization/eclipse-che-operator-openshift/teams/pushers 
+    * https://quay.io/application/eclipse-che-operator-kubernetes
+    * https://quay.io/application/eclipse-che-operator-openshift
+
+2. Get commit rights from @fbenoit to push community PRs
+    * https://github.com/che-incubator/community-operators
+
+
 ## Automated release workflows
 
 Currently all projects have automated release process, that consists of GitHub Actions workflow.
 Additionally, release logic is mostly contained within `make-release.sh` file, which allows to perform the release outside of GitHub Actions framework, should the need for it arises.
-For example, In [Che server](https://github.com/eclipse/che) we have [release.yml](https://github.com/eclipse/che/actions/workflows/release.yml) GitHub acitons workflow, which also makes [make-release.sh](https://github.com/eclipse/che/blob/master/make-release.sh) release script
+For example, in the [Che server](https://github.com/eclipse/che) repo, GitHub action [release.yml](https://github.com/eclipse/che/actions/workflows/release.yml) runs the [make-release.sh](https://github.com/eclipse/che/blob/master/make-release.sh) release script.
 
-GitHub Actions release workflows are currently allowed to be run by any user, who has write permissions to the repository, in which the workflow is located. They also utilize repository secrets, such as Quay or Docker.io credentials, that are required by most of the release workflows, as should be provided manually, when used standalone `make-release.sh`.
+GitHub Actions release workflows can be run by any user with write access to the repo in which the workflow is located. They use repository secrets, such as Quay or Docker.io credentials, that are required by most of the release workflows. If run outside GitHub, authorized users will need to provide their own secrets.
 
 ## Projects overview
 Most of the projects that are part of the weekly release cycle are also united in this project's workflow - the [Release - Orchestrate Overall Release Phases](https://github.com/eclipse/che-release/actions?query=workflow%3A%22Release+-+Orchestrate+Overall+Release+Phases%22)
@@ -47,21 +59,21 @@ At the moment, [Release - Orchestrate Overall Release Phases]((https://github.co
 Currently there are several phases, representing an order of projects, which we can execute in parallel, as long as their dependent projects have been released. Projects in lower phases are those, on which projects from higher phase will depend.
 Phase 1 - [che-devfile-registry](https://github.com/eclipse/che-devfile-registry), [che-theia](https://github.com/eclipse/che-theia), [che-machine-exec](https://github.com/eclipse-che/che-machine-exec), [che-jwt-proxy](https://github.com/eclipse/che-jwtproxy), [kubernetes-image-puller](https://github.com/che-incubator/kubernetes-image-puller), [devworkspace-operator](https://github.com/devfile/devworkspace-operator), [che-dashboard](https://github.com/eclipse/che-dashboard)
 Phase 2 - [che-plugin-registry](https://github.com/eclipse/che-plugin-registry) - depends on [che-theia](https://github.com/eclipse/che-theia)
-Phase 3 - [che](https://github.com/eclipse/che) - depends on - [che-dashboard](https://github.com/eclipse/che-dashboard)
+Phase 3 - [che](https://github.com/eclipse/che) - depends on [che-dashboard](https://github.com/eclipse/che-dashboard)
 Phase 4 - [devworkspace-che-operator](https://github.com/che-incubator/devworkspace-che-operator) - depends on [devworkspace-operator](https://github.com/devfile/devworkspace-operator)
-Phase 5 - [che-operator](https://github.com/eclipse-che/che-operator) - depends on everything from phase 1 to 4
+Phase 5 - [che-operator](https://github.com/eclipse-che/che-operator) - depends on phases 1 to 4
 
-Phases list is a comma separated list (default, which includes all phases "1,2,3,4,5"). Removing certain phases is useful, when you rerun the orchestration job, and certain projects shouldn't be released again. 
+The phases list is a comma-separated list (default, which includes all phases "1,2,3,4,5"). Removing certain phases is useful, when you rerun the orchestration job, and certain projects shouldn't be released again. 
 Note that this approach will change, once a new system will be implemented, where we can more clearly specify dependencies between workflows, using special types of GitHub action.
 
 
 ## Release procedure
 1. [Create new release issue to report status and collect any blocking issues](https://github.com/eclipse/che/issues/new?assignees=&labels=kind%2Frelease&template=release.md&title=Release+Che+7.FIXME)
 
-2. To start a release, use the [Release - Orchestrate Overall Release Phases] workflow to begin with releasing . In the input, you have to provide the version of Che, DevWorkspace controller, and phases. 
+2. To start a release, use the [Release - Orchestrate Overall Release Phases] workflow to trigger workflows in other Che repos. Workflows triggered align to the repos noted in the previous section. In the input, provide the version of Che, DevWorkspace controller, and phases to run. 
 
 2.1 If one of the workflows has crashed, inspect it. Apply fixes if needed, and restart it. You can restart individual workflow, or whole phase in orchestration job, whichever is simpler.
-2.2 Keep in mind, that sometimes you'll need to regenerate tags, or skip certain substeps in that job. Also ensure that correct code is in place, whether it is main or bugfix branch.
+2.2 Keep in mind, that sometimes you'll need to [regenerate tags](https://github.com/eclipse/che/issues/18879), or skip certain substeps in that job. Also ensure that correct code is in place, whether it is main or bugfix branch.
 2.3 Sometimes, the hotfix changes to the workflow can take too long to get approved and merged. In certain situations, we can use the modified workflow file, which is pushed in its own branch, and then trigger the workflow, while specifying the branch with our modified workflow. 
 
 3. When Che Operator PRs have been generated, you must wait for the approval of PR checks, that are in that repository. If there are any questions, you can forward them to the check maintaners (Deploy team). When PRs are merged, the last batch of projects will be triggered to release
@@ -69,7 +81,7 @@ Note that this approach will change, once a new system will be implemented, wher
 3.2 Community operator PRs are merged by Operator Framework members, as soon as their tests will pass (in some cases they may require some input from us)
 3.3 Docs PR has to be merged by Docs team.
 
-4. If the release is complete, send an e-mail to `che-dev` mailing list, about succesful release.
+4. When the release is complete, an e-mail should be sent to the `che-dev` mailing list. Additionally, a [Mattermost notification](https://github.com/eclipse/che-release/actions/workflows/release-send-mattermost-announcement.yml) can be sent to https://mattermost.eclipse.org/eclipse/channels/eclipse-che-releases
 
 --------------
 
@@ -77,3 +89,7 @@ Note that this approach will change, once a new system will be implemented, wher
 # Che release gotchas
 
 * VERSION file - should we add a test to verify we're not trying to re-release an existing release w/o an explicit override?
+* https://github.com/eclipse/che/issues/19334 - Mattermost notifications should clarify if the released artifact was successful or if the action failed. 
+* https://github.com/eclipse/che/issues/18879 - Implement proper tag recreation option for release scripts
+* https://github.com/eclipse/che/issues/17178 - Changelog generation contains too much information
+

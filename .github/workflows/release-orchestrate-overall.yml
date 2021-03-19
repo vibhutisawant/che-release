@@ -16,7 +16,24 @@ on:
         required: true
         default: '1,2,3,4,5'
 jobs:
+  pre_job:
+    runs-on: ubuntu-latest
+    # Map a step output to a job output
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@ea548f2a2a08c55dcb111418ca62181f7887e297
+        with:
+          # always skip concurrent runs
+          concurrent_skipping: 'always'
+          # prevent re-running the same release for the same version and phases
+          skip_after_successful_duplicate: 'true'
+          # "workflow_dispatch" trigger is set for exclusion by default, so we have to clear it
+          do_not_skip: '[]'
   build:
+    needs: pre_job
+    if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
     runs-on: ubuntu-16.04
     steps:
       - uses: actions/checkout@v2

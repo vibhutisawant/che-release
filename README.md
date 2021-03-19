@@ -61,7 +61,7 @@ Currently there are several phases, representing an order of projects, which we 
 * Phase 1 - [che-devfile-registry](https://github.com/eclipse/che-devfile-registry), [che-theia](https://github.com/eclipse/che-theia), [che-machine-exec](https://github.com/eclipse-che/che-machine-exec), [che-jwt-proxy](https://github.com/eclipse/che-jwtproxy), [kubernetes-image-puller](https://github.com/che-incubator/kubernetes-image-puller), [devworkspace-operator](https://github.com/devfile/devworkspace-operator), [che-dashboard](https://github.com/eclipse/che-dashboard)
 * Phase 2 - [che-plugin-registry](https://github.com/eclipse/che-plugin-registry) - depends on [che-theia](https://github.com/eclipse/che-theia)
 * Phase 3 - [che](https://github.com/eclipse/che) - depends on [che-dashboard](https://github.com/eclipse/che-dashboard)
-* Phase 4 - [devworkspace-che-operator](https://github.com/che-incubator/devworkspace-che-operator) - depends on [devworkspace-operator](https://github.com/devfile/devworkspace-operator) and [devworkspace-che-operator](https://github.com/che-incubator/devworkspace-che-operator)
+* Phase 4 - [devworkspace-che-operator](https://github.com/che-incubator/devworkspace-che-operator) - depends on [devworkspace-operator](https://github.com/devfile/devworkspace-operator)
 * Phase 5 - [che-operator](https://github.com/eclipse-che/che-operator) - depends on phases 1 to 4
 
 The phases list is a comma-separated list (default, which includes all phases "1,2,3,4,5"). Removing certain phases is useful, when you rerun the orchestration job, and certain projects shouldn't be released again. 
@@ -73,19 +73,19 @@ Note that this approach will change, once a new system will be implemented, wher
 
 2. To start a release, use the [Release - Orchestrate Overall Release Phases](https://github.com/eclipse/che-release/actions/workflows/release-orchestrate-overall.yml) workflow to trigger workflows in other Che repos. Workflows triggered align to the repos noted in the previous section. In the input, provide the version of Che, DevWorkspace controller, and phases to run. 
 
-2.1 If one of the workflows has crashed, inspect it. Apply fixes if needed, and restart it. You can restart individual workflow, or whole phase in orchestration job, whichever is simpler.
+    2.1 If one of the workflows has crashed, inspect it. Apply fixes if needed, and restart it. You can restart individual workflow, or whole phase in orchestration job, whichever is simpler.
 
-2.2 Keep in mind, that sometimes you'll need to [regenerate tags](https://github.com/eclipse/che/issues/18879), or skip certain substeps in that job. Also ensure that correct code is in place, whether it is main or bugfix branch.
+    2.2 Keep in mind, that sometimes you'll need to [regenerate tags](https://github.com/eclipse/che/issues/18879), or skip certain substeps in that job. Also ensure that correct code is in place, whether it is main or bugfix branch.
 
-2.3 Sometimes, the hotfix changes to the workflow can take too long to get approved and merged. In certain situations, we can use the modified workflow file, which is pushed in its own branch, and then trigger the workflow, while specifying the branch with our modified workflow. 
+    2.3 Sometimes, the hotfix changes to the workflow can take too long to get approved and merged. In certain situations, we can use the modified workflow file, which is pushed in its own branch, and then trigger the workflow, while specifying the branch with our modified workflow. 
 
 3. When Che Operator PRs have been generated, you must wait for the approval of PR checks, that are in that repository. If there are any questions, you can forward them to the check maintaners (Deploy team). When PRs are merged, the last batch of projects will be triggered to release
 
-3.1 Chectl PR has to be closed manually, after they're generated, and all its associated PR checks are passed.
+    3.1 Chectl PR has to be closed manually, after they're generated, and all its associated PR checks are passed.
 
-3.2 Community operator PRs are merged by Operator Framework members, as soon as their tests will pass (in some cases they may require some input from us)
+    3.2 Community operator PRs are merged by Operator Framework members, as soon as their tests will pass (in some cases they may require some input from us)
 
-3.3 Docs PR has to be merged by Docs team.
+    3.3 Docs PR has to be merged by Docs team.
 
 4. When the release is complete, an e-mail should be sent to the `che-dev` mailing list. Additionally, a [Mattermost notification](https://github.com/eclipse/che-release/actions/workflows/release-send-mattermost-announcement.yml) can be sent to https://mattermost.eclipse.org/eclipse/channels/eclipse-che-releases
 

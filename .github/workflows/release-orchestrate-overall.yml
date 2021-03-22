@@ -105,6 +105,4 @@ jobs:
           export CHE_BOT_GITHUB_TOKEN=${{ secrets.CHE_BOT_GITHUB_TOKEN }}
           export CHE_INCUBATOR_BOT_GITHUB_TOKEN=${{ secrets.CHE_INCUBATOR_BOT_GITHUB_TOKEN }}
           set -e
-          # determine which OS we're using: rhel or ubuntu
-          cat /etc/os-release || true
-          ./cico_release.sh ubuntu
+          ./make-release.sh

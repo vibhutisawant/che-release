@@ -119,13 +119,20 @@ invokeAction() {
         computeWorkflowId $this_repo "$this_action_name"
         # now we have a global value for $workflow_id
     fi
+
+    if [[ ${CHE_VERSION} == *".0" ]]; then
+        workflow_ref="master"
+    else
+        workflow_ref=$BRANCH
+    fi
+
     if [[ ${this_repo} == "che-incubator"* ]] || [[ ${this_repo} == "devfile"* ]]; then
         this_github_token=${CHE_INCUBATOR_BOT_GITHUB_TOKEN}
     else
         this_github_token=${GITHUB_TOKEN}
     fi
 
-    curl -sSL https://api.github.com/repos/${this_repo}/actions/workflows/${workflow_id}/dispatches -X POST -H "Authorization: token ${this_github_token}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"master\",\"inputs\": {\"${this_var}\":\"${this_val}\"} }" || die_with "[ERROR] Problem invoking action https://github.com/${this_repo}/actions?query=workflow%3A%22${this_action_name// /+}%22"
+    curl -sSL https://api.github.com/repos/${this_repo}/actions/workflows/${workflow_id}/dispatches -X POST -H "Authorization: token ${this_github_token}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"${workflow_ref}\",\"inputs\": {\"${this_var}\":\"${this_val}\"} }" || die_with "[ERROR] Problem invoking action https://github.com/${this_repo}/actions?query=workflow%3A%22${this_action_name// /+}%22"
     echo "[INFO] Invoked '${this_action_name}' action ($workflow_id) - see https://github.com/${this_repo}/actions?query=workflow%3A%22${this_action_name// /+}%22"
 }
 
@@ -149,9 +156,8 @@ branchJWTProxyAndKIP() {
     invokeAction che-incubator/kubernetes-image-puller "Create branch" "5409996" branch "${BRANCH}"
 }
 
-releaseDashboardAndWorkspaceLoader() {
+releaseDashboard() {
     invokeAction eclipse/che-dashboard "Release Che Dashboard" "3152474" version "${CHE_VERSION}"
-    invokeAction eclipse/che-workspace-loader "Release Che Workspace Loader" "3543888" version "${CHE_VERSION}"
 }
 
 releaseCheServer() {
@@ -159,7 +165,7 @@ releaseCheServer() {
 }
 
 releaseOperator() {
-    invokeAction eclipse-che/che-operator "Release Che Operator" "3593082" version "${CHE_VERSION}"
+    invokeAction eclipse-che/che-operator "Release Che Operator" "3593082" version "${CHE_VERSION}" dwoVersion "${DWO_VERSION}" dwoCheVersion "v${CHE_VERSION}"
 }
 
 releaseDwoOperator() {
@@ -167,7 +173,7 @@ releaseDwoOperator() {
 }
 
 releaseDwoCheOperator() {
-    invokeAction che-incubator/devworkspace-che-operator "Release DevWorkspace Che Operator" "6597719" version "v${CHE_VERSION}"
+    invokeAction che-incubator/devworkspace-che-operator "Release DevWorkspace Che Operator" "6597719" version "v${CHE_VERSION}" dwoVersion "${DWO_VERSION}"
 }
 
 # TODO change it to someone else?
@@ -207,9 +213,7 @@ if [[ ${PHASES} == *"1"* ]]; then
     releaseMachineExec
     releaseCheTheia
     releaseDevfileRegistry
-
-    releaseDashboardAndWorkspaceLoader
-    releaseDwoOperator
+    releaseDashboard
     branchJWTProxyAndKIP
 fi
 wait
@@ -220,7 +224,6 @@ verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 30
 
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 30
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-workspace-loader:${CHE_VERSION} 30
 
 # https://quay.io/repository/devfile/devworkspace-controller?tab=tags
 verifyContainerExistsWithTimeout ${REGISTRY}/devfile/devworkspace-controller:${DWO_VERSION} 30

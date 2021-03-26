@@ -152,7 +152,7 @@ releaseMachineExec() {
 }
 
 releaseCheTheia() {
-    invokeAction eclipse/che-theia "Release Che Theia" "5717988" "version=${CHE_VERSION}"
+    invokeAction eclipse-che/che-theia "Release Che Theia" "5717988" "version=${CHE_VERSION}"
 }
 
 releaseDevfileRegistry() {

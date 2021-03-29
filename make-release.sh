@@ -225,6 +225,7 @@ if [[ ${PHASES} == *"1"* ]]; then
     releaseCheTheia
     releaseDevfileRegistry
     releaseDashboard
+    releaseDwoOperator
     branchJWTProxyAndKIP
 fi
 wait

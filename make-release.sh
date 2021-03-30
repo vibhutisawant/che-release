@@ -156,10 +156,10 @@ releaseCheTheia() {
 }
 
 releaseDevfileRegistry() {
-    invokeAction eclipse/che-devfile-registry "Release Che Devfile Registry" "4191260" "version=${CHE_VERSION}"
+    invokeAction eclipse-che/che-devfile-registry "Release Che Devfile Registry" "4191260" "version=${CHE_VERSION}"
 }
 releasePluginRegistry() {
-    invokeAction eclipse/che-plugin-registry "Release Che Plugin Registry" "4191251" "version=${CHE_VERSION}"
+    invokeAction eclipse-che/che-plugin-registry "Release Che Plugin Registry" "4191251" "version=${CHE_VERSION}"
 }
 
 branchJWTProxyAndKIP() {

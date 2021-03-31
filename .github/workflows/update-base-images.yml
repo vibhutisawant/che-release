@@ -1,0 +1,31 @@
+# This Workflow performs a full release of che dashboard
+name: Update base images
+on:
+  workflow_dispatch
+
+jobs:
+
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+      - 
+        name: print output 
+        run: |
+        echo "testing job run"
+        exit 1
+  notify:
+    if: ${{ test.status }} == success || ${{ test.status }} == failure
+    runs-on: ubuntu-20.04
+    steps:
+      -
+        name: "do if success"
+        run: |
+        echo "prepare success notification"
+      -
+        name: "do if failure"
+        run: |
+        echo "prepare failure notification"
+      -
+        name: "display notification"
+        run: |
+        echo "display notification"

@@ -128,7 +128,7 @@ invokeAction() {
 
     inputsJson="{}"
 
-    IFS=',' read -ra paramMap <<< "${param}"
+    IFS=',' read -ra paramMap <<< "${this_params}"
     for keyvalue in "${paramMap[@]}"
     do 
         key=${keyvalue%=*}

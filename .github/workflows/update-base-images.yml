@@ -11,8 +11,8 @@ jobs:
       - 
         name: print output 
         run: |
-        echo "testing job run"
-        exit 1
+          echo "testing job run"
+          exit 1
   notify:
     if: ${{ test.status }} == success || ${{ test.status }} == failure
     runs-on: ubuntu-20.04
@@ -20,12 +20,12 @@ jobs:
       -
         name: "do if success"
         run: |
-        echo "prepare success notification"
+          echo "prepare success notification"
       -
         name: "do if failure"
         run: |
-        echo "prepare failure notification"
+          echo "prepare failure notification"
       -
         name: "display notification"
         run: |
-        echo "display notification"
+          echo "display notification"

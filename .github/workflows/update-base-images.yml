@@ -16,7 +16,7 @@ jobs:
     outputs:
       job_status: ${{ job.status }}
   notify:
-    if: always() && (needs.build.job_status=='failure' || needs.build.outputs.job_status=='success')
+    if: always() && (needs.build.outputs.job_status=='failure' || needs.build.outputs.job_status=='success')
     runs-on: ubuntu-20.04
     needs: build
     steps:

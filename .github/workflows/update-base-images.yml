@@ -13,6 +13,8 @@ jobs:
         run: |
           echo "testing job run"
           exit 1
+    outputs:
+      job_status: ${{ job.status }}
   notify:
     if: always() && (needs.test.build.job_status=='failure' || needs.build.outputs.job_status=='success')
     runs-on: ubuntu-20.04

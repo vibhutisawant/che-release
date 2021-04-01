@@ -14,7 +14,7 @@ jobs:
           echo "testing job run"
           exit 1
   notify:
-    if: always() && needs.test.outputs.job_status=='failure'
+    if: always()
     runs-on: ubuntu-20.04
     needs: test
     steps:

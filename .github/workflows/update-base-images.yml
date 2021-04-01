@@ -16,7 +16,7 @@ jobs:
   notify:
     if: always() && (needs.test.build.job_status=='failure' || needs.build.outputs.job_status=='success')
     runs-on: ubuntu-20.04
-    needs: test
+    needs: build
     steps:
       -
         name: "do if failure"

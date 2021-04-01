@@ -5,7 +5,7 @@ on:
 
 jobs:
 
-  test:
+  build:
     runs-on: ubuntu-20.04
     steps:
       - 
@@ -13,21 +13,19 @@ jobs:
         run: |
           echo "testing job run"
           exit 1
-    outputs:
-      job_status: ${{ job.status }}
   notify:
-    if: always()
+    if: always() && (needs.test.build.job_status=='failure' || needs.build.outputs.job_status=='success')
     runs-on: ubuntu-20.04
     needs: test
     steps:
       -
         name: "do if failure"
-        if: needs.test.outputs.job_status=='failure'
+        if: needs.build.outputs.job_status=='failure'
         run: |
           echo "prepare failure notification" > notification
       -
         name: "do if success"
-        if: needs.test.outputs.job_status=='success'
+        if: needs.build.outputs.job_status=='success'
         run: |
           echo "prepare success notification" > notification
       -

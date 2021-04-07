@@ -79,6 +79,9 @@ evaluateCheVariables() {
     BRANCH=${CHE_VERSION%.*}.x
     echo "Branch: ${BRANCH}"
 
+    DWO_BRANCH=${DWO_VERSION%.*}.x
+    echo "DWO Branch: ${DWO_BRANCH}"
+
     if [[ ${CHE_VERSION} == *".0" ]]; then
         BASEBRANCH="master"
     else
@@ -120,10 +123,22 @@ invokeAction() {
         # now we have a global value for $workflow_id
     fi
 
-    if [[ ${CHE_VERSION} == *".0" ]]; then
-        workflow_ref="master"
+    if [[ ${this_repo} == "devfile/devworkspace-operator" ]] || [[ ${this_repo} == "che-incubator/devworkspace-che-operator" ]];then
+        WORKFLOW_MAIN_BRANCH="main"
     else
-        workflow_ref=$BRANCH
+        WORKFLOW_MAIN_BRANCH="master"
+    fi
+
+    if [[ ${this_repo} == "devfile/devworkspace-operator" ]];then
+        WORKFLOW_BUGFIX_BRANCH=${DWO_BRANCH}
+    else
+        WORKFLOW_BUGFIX_BRANCH=${BRANCH}
+    fi
+
+    if [[ ${CHE_VERSION} == *".0" ]]; then
+        workflow_ref=${WORKFLOW_MAIN_BRANCH}
+    else
+        workflow_ref=${WORKFLOW_BUGFIX_BRANCH}
     fi
 
     inputsJson="{}"
@@ -229,16 +244,16 @@ if [[ ${PHASES} == *"1"* ]]; then
     branchJWTProxyAndKIP
 fi
 wait
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 30
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 30
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 30
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 30
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 30
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 60
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 60
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 60
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 60
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 60
 
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 30
+verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 60
 
 # https://quay.io/repository/devfile/devworkspace-controller?tab=tags
-verifyContainerExistsWithTimeout ${REGISTRY}/devfile/devworkspace-controller:${DWO_VERSION} 30
+verifyContainerExistsWithTimeout ${REGISTRY}/devfile/devworkspace-controller:${DWO_VERSION} 60
 
 # Release plugin-registry (depends on che-theia and machine-exec)
 set +x

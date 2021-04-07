@@ -91,6 +91,7 @@ jobs:
           DWO_VERSION="${{ github.event.inputs.dwoVersion }}"
           echo "CHE_VERSION=${CHE_VERSION}"
           sed -i VERSION -r -e "s#CHE_VERSION=.*#CHE_VERSION=${CHE_VERSION}#"
+          sed -i VERSION -r -e "s#DWO_VERSION=.*#DWO_VERSION=${DWO_VERSION}#"
           PHASES="${{ github.event.inputs.phases }}"
           echo "PHASES=${PHASES}"
           sed -i VERSION -r -e "s#PHASES=.*#PHASES=${PHASES}#"

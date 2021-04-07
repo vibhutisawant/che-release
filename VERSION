@@ -1,5 +1,7 @@
 # che version to release
-CHE_VERSION=7.27.0
+CHE_VERSION=7.28.2
+# devworkspace operator version to release
+DWO_VERSION=7.28.2
 # if true, release and deploy che parent
 RELEASE_CHE_PARENT=false
 # version of Che parent to use in maven builds

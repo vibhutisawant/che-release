@@ -188,7 +188,7 @@ releaseDashboard() {
 }
 
 releaseCheServer() {
-    invokeAction eclipse/che-server "Release Che Server" "5536792" "version=${CHE_VERSION}"
+    invokeAction eclipse/che "Release Che Server" "5536792" "version=${CHE_VERSION}"
 }
 
 releaseCheOperator() {

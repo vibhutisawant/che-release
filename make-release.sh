@@ -191,7 +191,7 @@ releaseCheServer() {
     invokeAction eclipse/che-server "Release Che Server" "5536792" "version=${CHE_VERSION}"
 }
 
-releaseOperator() {
+releaseCheOperator() {
     invokeAction eclipse-che/che-operator "Release Che Operator" "3593082" "version=${CHE_VERSION},dwoVersion=${DWO_VERSION},dwoCheVersion=v${CHE_VERSION}"
 }
 
@@ -304,7 +304,7 @@ fi
 # Release Che operator (create PRs)
 set +x
 if [[ ${PHASES} == *"5"* ]]; then
-    releaseOperator
+    releaseCheOperator
 fi
 wait
 

@@ -10,5 +10,10 @@ VERSION_CHE_PARENT=7.15.0
 DEPLOY_TO_NEXUS=true
 # if true, automatically release che-server on Nexus. If false, manual release required
 AUTORELEASE_ON_NEXUS=true
-# list of comma-separated phases to perform; default should be "1,2,3,4"
-PHASES="1,2,3,4"
+# list of comma-separated phases to perform; default should be "1,2,3,4,5"
+# 1: MachineExec, CheTheia, DevfileRegistry, Dashboard, DwoOperator, JWTProxyAndKIP
+# 2: PluginRegistry
+# 3: CheServer
+# 4: DwoCheOperator
+# 5: CheOperator
+PHASES="1,2,3,4,5"

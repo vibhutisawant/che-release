@@ -12,12 +12,15 @@ on:
         required: true
         default: ''
       phases:
-        description: 'Comma-separated phases to perform; default: "1,2,3,4,5". Omit phases that have successfully run. 
-# 1: MachineExec, CheTheia, DevfileRegistry, Dashboard, DwoOperator, JWTProxyAndKIP \n 
-# 2: PluginRegistry \r 
-# 3: CheServer <br/>
-# 4: DwoCheOperator 
-# 5: CheOperator'
+        description: '
+# Comma-separated phases to perform: 
+#1: MachineExec, CheTheia, DevfileRegistry, Dashboard, DwoOperator, JWTProxyAndKIP; 
+#2: PluginRegistry; 
+#3: CheServer; 
+#4: DwoCheOperator; 
+#5: CheOperator; 
+# Default: "1,2,3,4,5". Omit phases that have successfully run.
+'
         required: true
         default: '1,2,3,4,5'
 jobs:

@@ -96,8 +96,13 @@ jobs:
       - name: Release
         run: |
           CHE_VERSION="${{ github.event.inputs.version }}"
-          DWO_VERSION="${{ github.event.inputs.dwoVersion }}"
           echo "CHE_VERSION=${CHE_VERSION}"
+
+          DWO_VERSION="${{ github.event.inputs.dwoVersion }}"
+          # if user accidentally entered 0.y.z instead of v0.y.z, prefix with the required "v"
+          if [[ ${DWO_VERSION} != "v"* ]]; then DWO_VERSION="v${DWO_VERSION}"; fi
+          echo "DWO_VERSION=${DWO_VERSION}"
+
           sed -i VERSION -r -e "s#CHE_VERSION=.*#CHE_VERSION=${CHE_VERSION}#"
           sed -i VERSION -r -e "s#DWO_VERSION=.*#DWO_VERSION=${DWO_VERSION}#"
           PHASES="${{ github.event.inputs.phases }}"

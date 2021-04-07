@@ -79,6 +79,9 @@ evaluateCheVariables() {
     BRANCH=${CHE_VERSION%.*}.x
     echo "Branch: ${BRANCH}"
 
+    # if user accidentally entered 0.y.z instead of v0.y.z, prefix with the required "v"
+    if [[ ${DWO_VERSION} != "v"* ]]; then DWO_VERSION="v${DWO_VERSION}"; fi
+
     DWO_BRANCH=${DWO_VERSION#v}
     DWO_BRANCH=${DWO_VERSION%.*}.x
     echo "DWO Branch: ${DWO_BRANCH}"

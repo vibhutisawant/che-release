@@ -79,6 +79,7 @@ evaluateCheVariables() {
     BRANCH=${CHE_VERSION%.*}.x
     echo "Branch: ${BRANCH}"
 
+    DWO_BRANCH=${DWO_VERSION#v}
     DWO_BRANCH=${DWO_VERSION%.*}.x
     echo "DWO Branch: ${DWO_BRANCH}"
 

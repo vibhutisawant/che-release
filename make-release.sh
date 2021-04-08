@@ -21,12 +21,12 @@ verifyContainerExistsWithTimeout()
     count=1
     (( timeout_intervals=this_timeout*3 ))
     while [[ $count -le $timeout_intervals ]]; do # echo $count
-        sleep 20s
         echo "       [$count/$timeout_intervals] Verify ${1} exists..." 
         # check if the container exists
         verifyContainerExists "$1"
         if [[ ${containerExists} -eq 1 ]]; then break; fi
         (( count=count+1 ))
+        sleep 20s
     done
     # or report an error
     if [[ ${containerExists} -eq 0 ]]; then

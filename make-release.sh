@@ -280,7 +280,7 @@ wait
 # TODO this will go away when it's part of che-operator
 if [[ ${PHASES} == *"4"* ]] || [[ ${PHASES} == *"5"* ]]; then
     # https://quay.io/repository/che-incubator/devworkspace-che-operator?tab=tags
-    verifyContainerExistsWithTimeout ${REGISTRY}/che-incubator/devworkspace-che-operator:${CHE_VERSION} 30
+    verifyContainerExistsWithTimeout ${REGISTRY}/che-incubator/devworkspace-che-operator:v${CHE_VERSION} 30
 fi
 
 if [[ ${PHASES} == *"2"* ]] || [[ ${PHASES} == *"3"* ]] || [[ ${PHASES} == *"4"* ]] || [[ ${PHASES} == *"5"* ]]; then

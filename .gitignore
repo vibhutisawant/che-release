@@ -6,7 +6,6 @@ out
 che-docs/
 che-parent/
 che-dashboard/
-che-workspace-loader/
 che/
 
 test.sh

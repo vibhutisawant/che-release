@@ -31,7 +31,7 @@ updateImagesInProject "eclipse-che/che-machine-exec" "master" "" &
 updateImagesInProject "eclipse-che/che-theia" "master" "" &
 updateImagesInProject "eclipse/che-devfile-registry" "master" "" &
 updateImagesInProject "eclipse/che-plugin-registry" "master" "" &
-updateImagesInProject "eclipse/che-dashboard" "master" "" &
+updateImagesInProject "eclipse-che/che-dashboard" "main" "" &
 updateImagesInProject "che-incubator/chectl" "master" "" &
 updateImagesInProject "eclipse/che" "master" "" &
 updateImagesInProject "eclipse-che/che-operator" "master" "" &

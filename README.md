@@ -34,7 +34,7 @@ With the exception of some projects, it allows to perform the bulk of the releas
 - [che-theia](https://github.com/eclipse/che-theia) - release artifacts are several container images - [theia-dev](https://quay.io/repository/eclipse/che-theia-dev?tab=tags), [che-theia](https://quay.io/repository/eclipse/che-theia?tab=tags) and [che-theia-endpoint-runtime-binary](https://quay.io/repository/eclipse/che-theia-endpoint-runtime-binary?tab=tags)
 - [che-devfile-registry](https://github.com/eclipse/che-devfile-registry) - release artifact is the [eclipse/che-devfile-registry](https://quay.io/repository/eclipse/che-devfile-registry?tab=tags) container image
 - [che-plugin-registry](https://github.com/eclipse/che-plugin-registry) - release artifact is the [eclipse/che-plugin-registry](https://quay.io/repository/eclipse/che-plugin-registry?tab=tags) container image
-- [che-dashboard](https://github.com/eclipse/che-dashboard) - release artifacts is the [eclipse/che-dashboard](https://quay.io/repository/eclipse/che-dashboard?tab=tags) container image
+- [che-dashboard](https://github.com/eclipse-che/che-dashboard) - release artifacts is the [eclipse/che-dashboard](https://quay.io/repository/eclipse/che-dashboard?tab=tags) container image
 - [che-operator](https://github.com/eclipse-che/che-operator) - release artifacts is the [eclipse/che-operator](https://quay.io/repository/eclipse/che-operator?tab=tags) container image. Hovewer, the release has to completed manually, which will
 - [che-jwtproxy](https://github.com/eclipse/che-jwtproxy) - no actual release, only create a corresponding bugfix branch
 - [kubernetes-image-puller](https://github.com/che-incubator/kubernetes-image-puller) - no actual release, only create a corresponding bugfix branch
@@ -59,9 +59,9 @@ In the case of Che Operator, as well as workflows that depend on it - chectl, ch
 At the moment, [Release - Orchestrate Overall Release Phases]((https://github.com/eclipse/che-release/actions?query=workflow%3A%22Release+-+Orchestrate+Overall+Release+Phases%22)) job has the way of ordering the release by utilizing the concept of phases.
 Currently there are several phases, representing an order of projects, which we can execute in parallel, as long as their dependent projects have been released. Projects in lower phases are those, on which projects from higher phase will depend.
 
-* Phase 1 - [che-devfile-registry](https://github.com/eclipse/che-devfile-registry), [che-theia](https://github.com/eclipse/che-theia), [che-machine-exec](https://github.com/eclipse-che/che-machine-exec), [che-jwt-proxy](https://github.com/eclipse/che-jwtproxy), [kubernetes-image-puller](https://github.com/che-incubator/kubernetes-image-puller), [devworkspace-operator](https://github.com/devfile/devworkspace-operator), [che-dashboard](https://github.com/eclipse/che-dashboard)
+* Phase 1 - [che-devfile-registry](https://github.com/eclipse/che-devfile-registry), [che-theia](https://github.com/eclipse/che-theia), [che-machine-exec](https://github.com/eclipse-che/che-machine-exec), [che-jwt-proxy](https://github.com/eclipse/che-jwtproxy), [kubernetes-image-puller](https://github.com/che-incubator/kubernetes-image-puller), [devworkspace-operator](https://github.com/devfile/devworkspace-operator), [che-dashboard](https://github.com/eclipse-che/che-dashboard)
 * Phase 2 - [che-plugin-registry](https://github.com/eclipse/che-plugin-registry) - depends on [che-theia](https://github.com/eclipse/che-theia)
-* Phase 3 - [che](https://github.com/eclipse/che) - depends on [che-dashboard](https://github.com/eclipse/che-dashboard)
+* Phase 3 - [che](https://github.com/eclipse/che) - depends on [che-dashboard](https://github.com/eclipse-che/che-dashboard)
 * Phase 4 - [devworkspace-che-operator](https://github.com/che-incubator/devworkspace-che-operator) - depends on [devworkspace-operator](https://github.com/devfile/devworkspace-operator)
 * Phase 5 - [che-operator](https://github.com/eclipse-che/che-operator) - depends on phases 1 to 4
 

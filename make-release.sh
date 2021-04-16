@@ -187,7 +187,7 @@ branchJWTProxyAndKIP() {
 }
 
 releaseDashboard() {
-    invokeAction eclipse/che-dashboard "Release Che Dashboard" "3152474" "version=${CHE_VERSION}"
+    invokeAction eclipse-che/che-dashboard "Release Che Dashboard" "3152474" "version=${CHE_VERSION}"
 }
 
 releaseCheServer() {

@@ -14,15 +14,16 @@ on:
       phases:
         description: '
 # Comma-separated phases to perform: 
-#1: MachineExec, CheTheia, DevfileRegistry, Dashboard, DwoOperator, JWTProxyAndKIP; 
-#2: PluginRegistry; 
-#3: CheServer; 
-#4: DwoCheOperator; 
+#1: MachineExec, DevfileRegistry, Dashboard, DwoOperator, JWTProxyAndKIP; 
+#2: CheServer; 
+#3: CheTheia; 
+#4: ChePluginRegistry;
+#4: DwoCheOperator;  
 #5: CheOperator; 
-# Default: "1,2,3,4,5". Omit phases that have successfully run.
+# Default: "1,2,3,4,5,6". Omit phases that have successfully run.
 '
         required: true
-        default: '1,2,3,4,5'
+        default: '1,2,3,4,5,6'
 jobs:
   pre_job:
     runs-on: ubuntu-latest

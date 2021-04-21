@@ -241,7 +241,6 @@ set -e
 set +x
 if [[ ${PHASES} == *"1"* ]]; then
     releaseMachineExec
-    releaseCheTheia
     releaseDevfileRegistry
     releaseDashboard
     releaseDwoOperator
@@ -249,42 +248,16 @@ if [[ ${PHASES} == *"1"* ]]; then
 fi
 wait
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 60
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 60
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 60
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 60
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 60
-
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 60
-
 # https://quay.io/repository/devfile/devworkspace-controller?tab=tags
 verifyContainerExistsWithTimeout ${REGISTRY}/devfile/devworkspace-controller:${DWO_VERSION} 60
 
-# Release plugin-registry (depends on che-theia and machine-exec)
+
 set +x
-if [[ ${PHASES} == *"2"* ]]; then
-    releasePluginRegistry
-fi
-
 # Release server (depends on dashboard)
-if [[ ${PHASES} == *"3"* ]]; then
+if [[ ${PHASES} == *"2"* ]]; then
     releaseCheServer
-fi
-
-# Release devworkspace che operator 
-# TODO this will go away when it's part of che-operator
-if [[ ${PHASES} == *"4"* ]]; then
-    releaseDwoCheOperator
-fi
-wait
-
-# TODO this will go away when it's part of che-operator
-if [[ ${PHASES} == *"4"* ]] || [[ ${PHASES} == *"5"* ]]; then
-    # https://quay.io/repository/che-incubator/devworkspace-che-operator?tab=tags
-    verifyContainerExistsWithTimeout ${REGISTRY}/che-incubator/devworkspace-che-operator:v${CHE_VERSION} 30
-fi
-
-if [[ ${PHASES} == *"2"* ]] || [[ ${PHASES} == *"3"* ]] || [[ ${PHASES} == *"4"* ]] || [[ ${PHASES} == *"5"* ]]; then
-  verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 30
 fi
 
 IMAGES_LIST=(
@@ -296,17 +269,48 @@ IMAGES_LIST=(
     quay.io/eclipse/che-dashboard-dev
     quay.io/eclipse/che-e2e
 )
-
-if [[ ${PHASES} == *"3"* ]] || [[ ${PHASES} == *"4"* ]]; then
+if [[ ${PHASES} == *"2"* ]] || [[ ${PHASES} == *"3"* ]] || [[ ${PHASES} == *"6"* ]]; then
     # verify images all created from IMAGES_LIST
     for image in "${IMAGES_LIST[@]}"; do
         verifyContainerExistsWithTimeout ${image}:${CHE_VERSION} 60
     done
 fi
 
+set +x
+if [[ ${PHASES} == *"3"* ]]; then
+    releaseCheTheia
+fi
+
+if [[ ${PHASES} == *"3"* ]] || [[ ${PHASES} == *"6"* ]]; then
+  verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia:${CHE_VERSION} 60
+  verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-dev:${CHE_VERSION} 60
+  verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-theia-endpoint-runtime-binary:${CHE_VERSION} 60
+fi
+
+# Release plugin-registry (depends on che-theia and machine-exec)
+if [[ ${PHASES} == *"4"* ]]; then
+    releasePluginRegistry
+fi
+
+if [[ ${PHASES} == *"4"* ]] || [[ ${PHASES} == *"6"* ]]; then
+  verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 30
+fi
+
+# Release devworkspace che operator 
+# TODO this will go away when it's part of che-operator
+if [[ ${PHASES} == *"5"* ]]; then
+    releaseDwoCheOperator
+fi
+
+# TODO this will go away when it's part of che-operator
+if [[ ${PHASES} == *"5"* ]] || [[ ${PHASES} == *"6"* ]]; then
+    # https://quay.io/repository/che-incubator/devworkspace-che-operator?tab=tags
+    verifyContainerExistsWithTimeout ${REGISTRY}/che-incubator/devworkspace-che-operator:v${CHE_VERSION} 30
+fi
+
 # Release Che operator (create PRs)
 set +x
-if [[ ${PHASES} == *"5"* ]]; then
+if [[ ${PHASES} == *"6"* ]]; then
     releaseCheOperator
 fi
 wait

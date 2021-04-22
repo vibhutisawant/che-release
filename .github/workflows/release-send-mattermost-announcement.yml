@@ -13,10 +13,12 @@ jobs:
     steps:
     - name: Create message
       run: |
-        echo "{\"text\":\":che-logo: First post!\"}" > mattermost.json
+        milestone=${{ github.event.inputs.version }}
+        milestone=${milestone%.*}; echo "milestone: ${milestone}"
+        echo "{\"text\":\":che-logo: Che ${{ github.event.inputs.version }} has been released.\n\nPlease resolve or move unresolved issues assigned to this milestone: https://github.com/eclipse/che/milestones/${milestone}\"}" > mattermost.json
     - name: Send message
       uses: mattermost/action-mattermost-notify@master
       env:
         MATTERMOST_WEBHOOK_URL: ${{ secrets.MATTERMOST_WEBHOOK_URL }}
-        MATTERMOST_CHANNEL: eclipse-che-ci
+        MATTERMOST_CHANNEL: eclipse-che-releases
         MATTERMOST_USERNAME: che-bot

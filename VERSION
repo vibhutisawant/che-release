@@ -6,15 +6,11 @@ DWO_VERSION=7.28.2
 RELEASE_CHE_PARENT=false
 # version of Che parent to use in maven builds
 VERSION_CHE_PARENT=7.15.0
-# if true, deploy che artifacts (parent, server) to Nexus.
-DEPLOY_TO_NEXUS=true
-# if true, automatically release che-server on Nexus. If false, manual release required
-AUTORELEASE_ON_NEXUS=true
 # Comma-separated phases to perform: 
 #1: MachineExec, CheTheia, DevfileRegistry, Dashboard, DwoOperator, JWTProxyAndKIP; 
 #2: PluginRegistry; 
 #3: CheServer; 
 #4: DwoCheOperator; 
 #5: CheOperator; 
-# Default: "1,2,3,4,5". Omit phases that have successfully run.
-PHASES="1,2,3,4,5"
+# Default: "1,2,3,4,5,6". Omit phases that have successfully run.
+PHASES="1,2,3,4,5,6"

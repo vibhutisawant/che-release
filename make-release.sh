@@ -244,7 +244,7 @@ while [[ "$#" -gt 0 ]]; do
   case $1 in
     '-v'|'--version') CHE_VERSION="$2"; shift 1;;
     '-dv'|'--dwo-version') DWO_VERSION="$2"; shift 1;;
-    '-p'|'--phases') CHE_PARENT_VERSION="$2"; shift 1;;
+    '-p'|'--phases') PHASES="$2"; shift 1;;
   esac
   shift 1
 done

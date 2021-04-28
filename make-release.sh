@@ -100,7 +100,7 @@ evaluateCheVariables() {
     if [[ ${DWO_VERSION} != "v"* ]]; then DWO_VERSION="v${DWO_VERSION}"; fi
 
     DWO_BRANCH=${DWO_VERSION#v}
-    DWO_BRANCH=${DWO_VERSION%.*}.x
+    DWO_BRANCH=${DWO_BRANCH%.*}.x
     echo "DWO Branch: ${DWO_BRANCH}"
 
     if [[ ${CHE_VERSION} == *".0" ]]; then
@@ -267,7 +267,7 @@ evaluateCheVariables
 echo "BASH VERSION = $BASH_VERSION"
 set -e
 
-# Release che-theia, machine-exec and devfile-registry
+# Release projects that don't depend on other projects
 set +x
 if [[ ${PHASES} == *"1"* ]]; then
     releaseMachineExec
@@ -306,7 +306,7 @@ if [[ ${PHASES} == *"2"* ]] || [[ ${PHASES} == *"3"* ]] || [[ ${PHASES} == *"6"*
     done
 fi
 
-set +x
+# Release che-theia (depends on che-server's typescript dto)
 if [[ ${PHASES} == *"3"* ]]; then
     releaseCheTheia
 fi
@@ -326,7 +326,7 @@ if [[ ${PHASES} == *"4"* ]] || [[ ${PHASES} == *"6"* ]]; then
   verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-plugin-registry:${CHE_VERSION} 30
 fi
 
-# Release devworkspace che operator 
+# Release devworkspace che operator (depends on devworkspace-operator)
 # TODO this will go away when it's part of che-operator
 if [[ ${PHASES} == *"5"* ]]; then
     releaseDwoCheOperator

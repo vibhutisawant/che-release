@@ -27,6 +27,7 @@ Phases are comma-separated list, e.g. '1,2,3,4,5,6', where each phase has its as
 #6: CheOperator; "
 
   echo "Example: $0 --version 7.29.0 --dwo-version 0.3.0 --phases 1,2,3,4,5,6"; echo
+  exit 1
 }
 
 verifyContainerExistsWithTimeout()
@@ -241,7 +242,6 @@ setupGitconfig() {
 
 while [[ "$#" -gt 0 ]]; do
   case $1 in
-    '-t'|'--trigger-release') TRIGGER_RELEASE=1; NOCOMMIT=0; shift 0;;
     '-v'|'--version') CHE_VERSION="$2"; shift 1;;
     '-dv'|'--dwo-version') DWO_VERSION="$2"; shift 1;;
     '-p'|'--phases') CHE_PARENT_VERSION="$2"; shift 1;;
@@ -251,7 +251,6 @@ done
 
 if [[ ! ${CHE_VERSION} ]] || [[ ! ${DWO_VERSION} ]] || [[ ! ${PHASES} ]] ; then
   usage
-  exit 1
 fi
 
 set +x

@@ -7,10 +7,27 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" || exit; pwd)
 REGISTRY="quay.io"
 ORGANIZATION="eclipse"
 
-function die_with() 
+die_with() 
 {
 	echo "$*" >&2
 	exit 1
+}
+
+
+usage ()
+{
+  echo "Usage: $0  --version [CHE VERSION TO RELEASE] --dwo-version [DEVWORKSPACE OPERATOR VERSION TO RELEASE] --phases [LIST OF PHASES]
+
+Phases are comma-separated list, e.g. '1,2,3,4,5,6', where each phase has its associated projects:
+#1: MachineExec, CheTheia, DevfileRegistry, Dashboard, DwoOperator, JWTProxyAndKIP; 
+#2: CheServer; 
+#3: CheTheia; 
+#4: ChePluginRegistry
+#5: DwoCheOperator; 
+#6: CheOperator; "
+
+  echo "Example: $0 --version 7.29.0 --dwo-version 0.3.0 --phases 1,2,3,4,5,6"; echo
+  exit 1
 }
 
 verifyContainerExistsWithTimeout()
@@ -222,6 +239,19 @@ setupGitconfig() {
   # default to CHE_BOT GH token
   export GITHUB_TOKEN="${CHE_BOT_GITHUB_TOKEN}"
 }
+
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    '-v'|'--version') CHE_VERSION="$2"; shift 1;;
+    '-dv'|'--dwo-version') DWO_VERSION="$2"; shift 1;;
+    '-p'|'--phases') CHE_PARENT_VERSION="$2"; shift 1;;
+  esac
+  shift 1
+done
+
+if [[ ! ${CHE_VERSION} ]] || [[ ! ${DWO_VERSION} ]] || [[ ! ${PHASES} ]] ; then
+  usage
+fi
 
 set +x
 mkdir $HOME/.ssh/

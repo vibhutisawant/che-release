@@ -18,8 +18,8 @@ on:
 #2: CheServer; 
 #3: CheTheia; 
 #4: ChePluginRegistry;
-#4: DwoCheOperator;  
-#5: CheOperator; 
+#5: DwoCheOperator;  
+#6: CheOperator; 
 # Default: "1,2,3,4,5,6". Omit phases that have successfully run.
 '
         required: true
@@ -104,12 +104,7 @@ jobs:
           if [[ ${DWO_VERSION} != "v"* ]]; then DWO_VERSION="v${DWO_VERSION}"; fi
           echo "DWO_VERSION=${DWO_VERSION}"
 
-          sed -i VERSION -r -e "s#CHE_VERSION=.*#CHE_VERSION=${CHE_VERSION}#"
-          sed -i VERSION -r -e "s#DWO_VERSION=.*#DWO_VERSION=${DWO_VERSION}#"
           PHASES="${{ github.event.inputs.phases }}"
-          echo "PHASES=${PHASES}"
-          sed -i VERSION -r -e "s#PHASES=.*#PHASES=${PHASES}#"
-
           export CHE_GITHUB_SSH_KEY=${{ secrets.CHE_GITHUB_SSH_KEY }}
 
           export QUAY_ECLIPSE_CHE_USERNAME=${{ secrets.QUAY_USERNAME }}
@@ -120,4 +115,4 @@ jobs:
           export CHE_BOT_GITHUB_TOKEN=${{ secrets.CHE_BOT_GITHUB_TOKEN }}
           export CHE_INCUBATOR_BOT_GITHUB_TOKEN=${{ secrets.CHE_INCUBATOR_BOT_GITHUB_TOKEN }}
           set -e
-          ./make-release.sh
+          ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p ${PHASES} 

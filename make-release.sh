@@ -13,7 +13,6 @@ die_with()
 	exit 1
 }
 
-
 usage ()
 {
   echo "Usage: $0  --version [CHE VERSION TO RELEASE] --dwo-version [DEVWORKSPACE OPERATOR VERSION TO RELEASE] --phases [LIST OF PHASES]
@@ -90,7 +89,6 @@ installDebDeps(){
 }
 
 evaluateCheVariables() {
-    source VERSION
     echo "Che version: ${CHE_VERSION}"
     # derive branch from version
     BRANCH=${CHE_VERSION%.*}.x
@@ -109,10 +107,6 @@ evaluateCheVariables() {
         BASEBRANCH="${BRANCH}"
     fi
     echo "Basebranch: ${BASEBRANCH}" 
-    echo "Release che-parent: ${RELEASE_CHE_PARENT}"
-    echo "Version che-parent: ${VERSION_CHE_PARENT}"
-    echo "Deploy to nexus: ${DEPLOY_TO_NEXUS}"
-    echo "Autorelease on nexus: ${AUTORELEASE_ON_NEXUS}"
     echo "Release Process Phases: '${PHASES}'"
 }
 

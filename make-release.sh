@@ -15,7 +15,7 @@ die_with()
 
 usage ()
 {
-  echo "Usage: $0  --version [CHE VERSION TO RELEASE] --dwo-version [DEVWORKSPACE OPERATOR VERSION TO RELEASE] --phases [LIST OF PHASES]
+  echo "Usage: $0  --version [CHE VERSION TO RELEASE] --dwo-version [DEVWORKSPACE OPERATOR VERSION TO RELEASE] --parent-version [CHE PARENT VERSION] --phases [LIST OF PHASES]
 
 Phases are comma-separated list, e.g. '1,2,3,4,5,6', where each phase has its associated projects:
 #1: MachineExec, CheTheia, DevfileRegistry, Dashboard, DwoOperator, JWTProxyAndKIP; 
@@ -105,6 +105,15 @@ evaluateCheVariables() {
         BASEBRANCH="master"
     else
         BASEBRANCH="${BRANCH}"
+    fi
+
+    if [[ ${RELEASE_CHE_PARENT} != "true" ]]; then
+        RELEASE_CHE_PARENT="false"
+    fi
+
+    if [[ -z ${VERSION_CHE_PARENT} ]]; then
+        # get latest higher 7.yy.z tag of Che Parent as version
+        VERSION_CHE_PARENT=$(git -c 'versionsort.suffix=-' ls-remote --tags  https://github.com/eclipse/che-parent.git | cut --delimiter='/' --fields=3 | grep 7.* | sort --version-sort | tail --lines=1)
     fi
     echo "Basebranch: ${BASEBRANCH}" 
     echo "Release Process Phases: '${PHASES}'"
@@ -202,7 +211,7 @@ releaseDashboard() {
 }
 
 releaseCheServer() {
-    invokeAction eclipse/che "Release Che Server" "5536792" "version=${CHE_VERSION}"
+    invokeAction eclipse/che "Release Che Server" "5536792" "version=${CHE_VERSION},releaseParent=${RELEASE_CHE_PARENT},versionParent=${VERSION_CHE_PARENT}"
 }
 
 releaseCheOperator() {
@@ -239,6 +248,8 @@ while [[ "$#" -gt 0 ]]; do
     '-v'|'--version') CHE_VERSION="$2"; shift 1;;
     '-dv'|'--dwo-version') DWO_VERSION="$2"; shift 1;;
     '-p'|'--phases') PHASES="$2"; shift 1;;
+    '--release-parent') RELEASE_CHE_PARENT="true"; shift 0;;
+    '--parent-version') VERSION_CHE_PARENT="$2"; shift 1;;
   esac
   shift 1
 done

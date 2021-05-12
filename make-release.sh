@@ -147,7 +147,7 @@ invokeAction() {
         # now we have a global value for $workflow_id
     fi
 
-    if [[ ${this_repo} == "devfile/devworkspace-operator" ]] || [[ ${this_repo} == "che-incubator/devworkspace-che-operator" ]];then
+    if [[ ${this_repo} == "devfile/devworkspace-operator" ]] || [[ ${this_repo} == "che-incubator/devworkspace-che-operator" ]] || [[ ${this_repo} == "eclipse-che/che-machine-exec" ]] || [[ ${this_repo} == "eclipse-che/che-dashboard" ]] || [[ ${this_repo} == "eclipse-che/che-operator" ]];then
         WORKFLOW_MAIN_BRANCH="main"
     else
         WORKFLOW_MAIN_BRANCH="master"
@@ -187,7 +187,7 @@ invokeAction() {
 }
 
 releaseMachineExec() {
-    invokeAction eclipse-che/che-machine-exec "Release Che Machine Exec" "5149341" "version=${CHE_VERSION}"
+    invokeAction eclipse-che/che-machine-exec "Release Che Machine Exec" "7369994" "version=${CHE_VERSION}"
 }
 
 releaseCheTheia() {

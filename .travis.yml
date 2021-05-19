@@ -39,6 +39,7 @@ jobs:
       jdk: openjdk11
       install: 
       - |
+        sudo snap install --classic hub
         python -m pip install --upgrade pip
         pip install yq
         python --version

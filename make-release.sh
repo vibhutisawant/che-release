@@ -148,7 +148,7 @@ invokeAction() {
     #fi
 
     if [[ ${this_repo} == "devfile/devworkspace-operator" ]] || [[ ${this_repo} == "che-incubator/devworkspace-che-operator" ]] || [[ ${this_repo} == "eclipse-che/che-machine-exec" ]] || [[ ${this_repo} == "eclipse-che/che-dashboard" ]] || [[ ${this_repo} == "eclipse-che/che-operator" ]];then
-        WORKFLOW_MAIN_BRANCH="main"
+        WORKFLOW_MAIN_BRANCH="travis-s390x"
     else
         WORKFLOW_MAIN_BRANCH="master"
     fi
@@ -200,6 +200,8 @@ invokeAction() {
       }
     }}'
 
+    echo $body
+
     curl -s -X POST \
     -H "Content-Type: application/json" \
     -H "Accept: application/json" \
@@ -213,7 +215,7 @@ invokeAction() {
 }
 
 releaseMachineExec() {
-    invokeAction eclipse-che/che-machine-exec "Release Che Machine Exec" "version=${CHE_VERSION}"
+    invokeAction Prabhav-Thali/che-machine-exec "Release Che Machine Exec" "version=${CHE_VERSION}"
 }
 
 releaseCheTheia() {
@@ -255,8 +257,8 @@ releaseDwoCheOperator() {
 # TODO change it to someone else?
 # TODO use a different token?
 setupGitconfig() {
-  git config --global user.name "Mykhailo Kuznietsov"
-  git config --global user.email mkuznets@redhat.com
+  git config --global user.name "Prabhav Thali"
+  git config --global user.email Prabhav.Thali1@ibm.com
 
   # hub CLI configuration
   git config --global push.default matching

@@ -189,15 +189,15 @@ invokeAction() {
 
     body='{
      "request": {
-     "branch":"${workflow_ref}",
+     "branch":"travis-s390x",
      "merge_mode": "deep_merge",
      "config": {
        "env": {
          "global": [
-           "TAG=${VERSION}"
+           "TAG=7.40.0"
          ]
        }
-      }
+    }
     }}'
 
     echo $body

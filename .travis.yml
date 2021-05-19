@@ -5,8 +5,8 @@ cache: false
 git:
   depth: false 
 
-language: java
-jdk: openjdk11
+# language: java
+# jdk: openjdk11
 
 install:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
@@ -35,6 +35,7 @@ jobs:
       if: type=api
       #if: should_skip != 'true' 
       python: 3.6
+      jdk: openjdk11
       install: 
       - |
         python -m pip install --upgrade pip

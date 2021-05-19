@@ -22,12 +22,12 @@ env:
 
 jobs:
   include:
-    - stage: Pre-job
-      name: Pre-job
-      arch: amd64
-      dist: ubuntu-latest
-      install: skip
-      os: linux
+    # - stage: Pre-job
+    #   name: Pre-job
+    #   arch: amd64
+    #   dist: ubuntu-latest
+    #   install: skip
+    #   os: linux
 
     - &common-steps
       stage: Build

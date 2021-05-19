@@ -5,7 +5,8 @@ cache: false
 git:
   depth: false 
 
-# language: java
+language: python
+python: 3.6
 # jdk: openjdk11
 
 install:

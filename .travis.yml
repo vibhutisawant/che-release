@@ -32,8 +32,8 @@ jobs:
 
     - &common-steps
       stage: Build
-      name: Build
-      if: type=api
+      name: Build phase 1
+      if: env(PHASES)=1 AND type=api
       #if: should_skip != 'true' 
       python: 3.6
       jdk: openjdk11
@@ -81,12 +81,6 @@ jobs:
         export GITHUB_TOKEN=${CHE_BOT_GITHUB_TOKEN}
         export CHE_BOT_GITHUB_TOKEN=${CHE_BOT_GITHUB_TOKEN}
         export CHE_INCUBATOR_BOT_GITHUB_TOKEN=${CHE_INCUBATOR_BOT_GITHUB_TOKEN}
-      # script:
-      #   set -e
-      #   ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p ${PHASES} --parent-version ${PARENT_VERSION} 
-    - <<: *common-steps
-      name: Build Phase 1
-      if: env(PHASES)=1 AND type=api
       script: 
       - |
         set -e

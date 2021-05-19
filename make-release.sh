@@ -5,7 +5,7 @@
 
 SCRIPT_DIR=$(cd "$(dirname "$0")" || exit; pwd)
 REGISTRY="quay.io"
-ORGANIZATION="eclipse"
+ORGANIZATION="prabhav"
 
 die_with() 
 {
@@ -135,17 +135,17 @@ computeWorkflowId() {
 invokeAction() {
     this_repo=$1
     this_action_name=$2
-    this_workflow_id=$3
+    #this_workflow_id=$3
     #params is a comma-separated list of key=value entries
-    this_params=$4
+    this_params=$3
 
     # if provided, use previously computed workflow_id; otherwise compute it from the action's name so we can invoke the GH action by id
-    if [[ $this_workflow_id ]]; then
-        workflow_id=$this_workflow_id
-    else
-        computeWorkflowId $this_repo "$this_action_name"
+    #if [[ $this_workflow_id ]]; then
+        #workflow_id=$this_workflow_id
+    #else
+        #computeWorkflowId $this_repo "$this_action_name"
         # now we have a global value for $workflow_id
-    fi
+    #fi
 
     if [[ ${this_repo} == "devfile/devworkspace-operator" ]] || [[ ${this_repo} == "che-incubator/devworkspace-che-operator" ]] || [[ ${this_repo} == "eclipse-che/che-machine-exec" ]] || [[ ${this_repo} == "eclipse-che/che-dashboard" ]] || [[ ${this_repo} == "eclipse-che/che-operator" ]];then
         WORKFLOW_MAIN_BRANCH="main"
@@ -182,12 +182,38 @@ invokeAction() {
         this_github_token=${GITHUB_TOKEN}
     fi
 
-    curl -sSL https://api.github.com/repos/${this_repo}/actions/workflows/${workflow_id}/dispatches -X POST -H "Authorization: token ${this_github_token}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"${workflow_ref}\",\"inputs\": ${inputsJson} }" || die_with "[ERROR] Problem invoking action https://github.com/${this_repo}/actions?query=workflow%3A%22${this_action_name// /+}%22"
+    IFS='/' #setting comma as delimiter  
+    read -a strarr <<<"$this_repo"
+    Org=${strarr[0]}
+    Repo=${strarr[1]}
+
+    body='{
+     "request": {
+     "branch":"${workflow_ref}",
+     "merge_mode": "deep_merge",
+     "config": {
+       "env": {
+         "global": [
+           "TAG=${VERSION}"
+         ]
+       }
+      }
+    }}'
+
+    curl -s -X POST \
+    -H "Content-Type: application/json" \
+    -H "Accept: application/json" \
+    -H "Travis-API-Version: 3" \
+    -H "Authorization: token ${TRAVIS_TOKEN}" \
+    -d "$body" \
+    https://api.travis-ci.com/repo/${Org}%2F${Repo}/requests
+    
+    #curl -sSL https://api.github.com/repos/${this_repo}/actions/workflows/${workflow_id}/dispatches -X POST -H "Authorization: token ${this_github_token}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"${workflow_ref}\",\"inputs\": ${inputsJson} }" || die_with "[ERROR] Problem invoking action https://github.com/${this_repo}/actions?query=workflow%3A%22${this_action_name// /+}%22"
     echo "[INFO] Invoked '${this_action_name}' action ($workflow_id) - see https://github.com/${this_repo}/actions?query=workflow%3A%22${this_action_name// /+}%22"
 }
 
 releaseMachineExec() {
-    invokeAction eclipse-che/che-machine-exec "Release Che Machine Exec" "7369994" "version=${CHE_VERSION}"
+    invokeAction eclipse-che/che-machine-exec "Release Che Machine Exec" "version=${CHE_VERSION}"
 }
 
 releaseCheTheia() {
@@ -240,7 +266,7 @@ setupGitconfig() {
 
   # NOTE when invoking action from che-incubator/* repos (not eclipse/che* repos), must use CHE_INCUBATOR_BOT_GITHUB_TOKEN
   # default to CHE_BOT GH token
-  export GITHUB_TOKEN="${CHE_BOT_GITHUB_TOKEN}"
+  export GITHUB_TOKEN="${GITHUB_TOKEN}"
 }
 
 while [[ "$#" -gt 0 ]]; do
@@ -276,17 +302,17 @@ set -e
 set +x
 if [[ ${PHASES} == *"1"* ]]; then
     releaseMachineExec
-    releaseDevfileRegistry
-    releaseDashboard
-    releaseDwoOperator
-    branchJWTProxyAndKIP
+    #releaseDevfileRegistry
+    #releaseDashboard
+    #releaseDwoOperator
+    #branchJWTProxyAndKIP
 fi
 wait
 verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-machine-exec:${CHE_VERSION} 60
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 60
-verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 60
+#verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-devfile-registry:${CHE_VERSION} 60
+#verifyContainerExistsWithTimeout ${REGISTRY}/${ORGANIZATION}/che-dashboard:${CHE_VERSION} 60
 # https://quay.io/repository/devfile/devworkspace-controller?tab=tags
-verifyContainerExistsWithTimeout ${REGISTRY}/devfile/devworkspace-controller:${DWO_VERSION} 60
+#verifyContainerExistsWithTimeout ${REGISTRY}/devfile/devworkspace-controller:${DWO_VERSION} 60
 
 
 set +x

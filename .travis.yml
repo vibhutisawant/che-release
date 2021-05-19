@@ -25,11 +25,12 @@ jobs:
     - stage: Pre-job
       arch: amd64
       dist: ubuntu-latest
+      install: skip
       os: linux
 
     - &common-steps
       stage: Build
-      if: should_skip != 'true' 
+      #if: should_skip != 'true' 
       python: 3.6
       install: 
       - |
@@ -79,36 +80,42 @@ jobs:
       #   ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p ${PHASES} --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 1
+      if: $PHASES=1
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 1 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 2
+      if: $PHASES=2
       script:
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 2 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 3
+      if: $PHASES=3
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 3 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 4
+      if: $PHASES=4
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 4 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 5
+      if: $PHASES=5
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 5 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 6
+      if: $PHASES=6
       script: 
       - |
         set -e

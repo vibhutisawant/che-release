@@ -86,42 +86,42 @@ jobs:
       #   ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p ${PHASES} --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 1
-      if: $PHASES=1
+      if: env(PHASES)=1 AND type=api
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 1 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 2
-      if: $PHASES=2
+      if: env(PHASES)=2 AND type=api
       script:
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 2 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 3
-      if: $PHASES=3
+      if: env(PHASES)=3 AND type=api
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 3 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 4
-      if: $PHASES=4
+      if: env(PHASES)=4 AND type=api
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 4 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 5
-      if: $PHASES=5
+      if: env(PHASES)=5 AND type=api
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 5 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 6
-      if: $PHASES=6
+      if: env(PHASES)=6 AND type=api
       script: 
       - |
         set -e

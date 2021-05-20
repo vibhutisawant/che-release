@@ -299,14 +299,14 @@ if [[ ! ${CHE_VERSION} ]] || [[ ! ${DWO_VERSION} ]] || [[ ! ${PHASES} ]] ; then
   usage
 fi
 
-# set +x
-# #mkdir $HOME/.ssh/
-# ls $HOME/.ssh/
-# cat $HOME/.ssh/id_rsa
-# #echo $CHE_GITHUB_SSH_KEY | base64 -d > $HOME/.ssh/id_rsa
-# chmod 0400 $HOME/.ssh/id_rsa
-# ssh-keyscan github.com >> ~/.ssh/known_hosts
-# set -x
+set +x
+#mkdir $HOME/.ssh/
+ls $HOME/.ssh/
+cat $HOME/.ssh/id_rsa
+#echo $CHE_GITHUB_SSH_KEY | base64 -d > $HOME/.ssh/id_rsa
+chmod 0400 $HOME/.ssh/id_rsa
+ssh-keyscan github.com >> ~/.ssh/known_hosts
+set -x
 
 installDebDeps
 setupGitconfig

@@ -207,7 +207,7 @@ invokeAction() {
     \"config\": {
       \"env\": {
         \"global\": [
-          \"TAG\"=\"$value\"
+          \"TAG=$value\"
          ]
        }
     }

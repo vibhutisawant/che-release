@@ -165,16 +165,16 @@ invokeAction() {
         workflow_ref=${WORKFLOW_BUGFIX_BRANCH}
     fi
 
-    inputsJson="{}"
+    # inputsJson="{}"
 
-    IFS=',' read -ra paramMap <<< "${this_params}"
-    for keyvalue in "${paramMap[@]}"
-    do 
-        key=${keyvalue%=*}
-        value=${keyvalue#*=}
-        echo $var1
-        inputsJson=$(echo "${inputsJson}" | jq ". + {\"${key}\": \"${value}\"}")
-    done
+    # IFS=',' read -ra paramMap <<< "${this_params}"
+    # for keyvalue in "${paramMap[@]}"
+    # do 
+    #     key=${keyvalue%=*}
+    #     value=${keyvalue#*=}
+    #     echo $var1
+    #     inputsJson=$(echo "${inputsJson}" | jq ". + {\"${key}\": \"${value}\"}")
+    # done
 
     if [[ ${this_repo} == "che-incubator"* ]] || [[ ${this_repo} == "devfile"* ]]; then
         this_github_token=${CHE_INCUBATOR_BOT_GITHUB_TOKEN}
@@ -187,31 +187,31 @@ invokeAction() {
     Org=${strarr[0]}
     Repo=${strarr[1]}
 
-    body="{
-     "request": {
-     "branch":"$WORKFLOW_MAIN_BRANCH",
-     "merge_mode": "deep_merge_append",
-     "config": {
-       "env": {
-         "global": [
-           "TAG=$CHE_VERSION"
-         ]
-       }
-    }
-    }}"
-
     # body="{
-    # \"request\":{
-    # \"branch\":\"$WORKFLOW_MAIN_BRANCH\",
-    # \"merge_mode\": \"deep_merge_append\", 
-    # \"config\": {
-    #   \"env\": {
-    #     \"global\": [
-    #       \"TAG=$value\"
+    #  "request": {
+    #  "branch":"$WORKFLOW_MAIN_BRANCH",
+    #  "merge_mode": "deep_merge_append",
+    #  "config": {
+    #    "env": {
+    #      "global": [
+    #        "TAG=$CHE_VERSION"
     #      ]
     #    }
     # }
     # }}"
+
+    body="{
+    \"request\":{
+    \"branch\":\"$WORKFLOW_MAIN_BRANCH\",
+    \"merge_mode\": \"deep_merge_append\", 
+    \"config\": {
+      \"env\": {
+        \"global\": [
+          \"TAG=$CHE_VERSION\"
+         ]
+       }
+    }
+    }}"
 
     echo $body
 
@@ -224,7 +224,7 @@ invokeAction() {
     https://api.travis-ci.com/repo/${Org}%2F${Repo}/requests
     
     #curl -sSL https://api.github.com/repos/${this_repo}/actions/workflows/${workflow_id}/dispatches -X POST -H "Authorization: token ${this_github_token}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"${workflow_ref}\",\"inputs\": ${inputsJson} }" || die_with "[ERROR] Problem invoking action https://github.com/${this_repo}/actions?query=workflow%3A%22${this_action_name// /+}%22"
-    echo "[INFO] Invoked '${this_action_name}' action ($workflow_id) - see https://github.com/${this_repo}/actions?query=workflow%3A%22${this_action_name// /+}%22"
+    echo "[INFO] Invoked '${this_action_name}' Travis job - see https://travis-ci.com/github/${Org}/${Repo}/builds"
 }
 
 releaseMachineExec() {

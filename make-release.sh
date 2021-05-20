@@ -203,7 +203,7 @@ invokeAction() {
     body="{
     \"request\":{
     \"branch\":\"$WORKFLOW_MAIN_BRANCH\",
-    \"merge_mode\": \"deep_merge\", 
+    \"merge_mode\": \"deep_merge_append\", 
     \"config\": {
       \"env\": {
         \"global\": [

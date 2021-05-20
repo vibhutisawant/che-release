@@ -187,31 +187,31 @@ invokeAction() {
     Org=${strarr[0]}
     Repo=${strarr[1]}
 
-    # body='{
-    #  "request": {
-    #  "branch":"travis-s390x",
-    #  "merge_mode": "deep_merge",
-    #  "config": {
-    #    "env": {
-    #      "global": [
-    #        "TAG=7.40.0"
-    #      ]
-    #    }
-    # }
-    # }}'
-
     body="{
-    \"request\":{
-    \"branch\":\"$WORKFLOW_MAIN_BRANCH\",
-    \"merge_mode\": \"deep_merge_append\", 
-    \"config\": {
-      \"env\": {
-        \"global\": [
-          \"TAG=$value\"
+     "request": {
+     "branch":"$WORKFLOW_MAIN_BRANCH",
+     "merge_mode": "deep_merge_append",
+     "config": {
+       "env": {
+         "global": [
+           "TAG=$CHE_VERSION"
          ]
        }
     }
     }}"
+
+    # body="{
+    # \"request\":{
+    # \"branch\":\"$WORKFLOW_MAIN_BRANCH\",
+    # \"merge_mode\": \"deep_merge_append\", 
+    # \"config\": {
+    #   \"env\": {
+    #     \"global\": [
+    #       \"TAG=$value\"
+    #      ]
+    #    }
+    # }
+    # }}"
 
     echo $body
 
@@ -299,12 +299,14 @@ if [[ ! ${CHE_VERSION} ]] || [[ ! ${DWO_VERSION} ]] || [[ ! ${PHASES} ]] ; then
   usage
 fi
 
-set +x
-mkdir $HOME/.ssh/
-echo $CHE_GITHUB_SSH_KEY | base64 -d > $HOME/.ssh/id_rsa
-chmod 0400 $HOME/.ssh/id_rsa
-ssh-keyscan github.com >> ~/.ssh/known_hosts
-set -x
+# set +x
+# #mkdir $HOME/.ssh/
+# ls $HOME/.ssh/
+# cat $HOME/.ssh/id_rsa
+# #echo $CHE_GITHUB_SSH_KEY | base64 -d > $HOME/.ssh/id_rsa
+# chmod 0400 $HOME/.ssh/id_rsa
+# ssh-keyscan github.com >> ~/.ssh/known_hosts
+# set -x
 
 installDebDeps
 setupGitconfig

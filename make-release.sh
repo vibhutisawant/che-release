@@ -187,19 +187,31 @@ invokeAction() {
     Org=${strarr[0]}
     Repo=${strarr[1]}
 
-    body='{
-     "request": {
-     "branch":"travis-s390x",
-     "merge_mode": "deep_merge",
-     "config": {
-       "env": {
-         "global": [
-           "TAG=7.40.0"
+    # body='{
+    #  "request": {
+    #  "branch":"travis-s390x",
+    #  "merge_mode": "deep_merge",
+    #  "config": {
+    #    "env": {
+    #      "global": [
+    #        "TAG=7.40.0"
+    #      ]
+    #    }
+    # }
+    # }}'
+
+    body="{
+    \"request\":{
+    \"branch\":\"$WORKFLOW_MAIN_BRANCH\" 
+    \"merge_mode\": \"deep_merge\", 
+    \"config\": {
+       \"env\": {
+         \"global\": [
+           \"TAG\"=\"$value\"
          ]
        }
     }
-    }}'
-
+    }}"
     echo $body
 
     curl -s -X POST \

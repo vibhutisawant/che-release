@@ -205,14 +205,14 @@ invokeAction() {
     \"branch\":\"$WORKFLOW_MAIN_BRANCH\",
     \"merge_mode\": \"deep_merge\", 
     \"config\": {
-        \"env\": {
-          \"global\": [
-            \"TAG\"=\"$value\"
+      \"env\": {
+        \"global\": [
+          \"TAG\"=\"$value\"
          ]
        }
     }
     }}"
-    
+
     echo $body
 
     curl -s -X POST \

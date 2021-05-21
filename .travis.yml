@@ -19,7 +19,7 @@ env:
   - DWO_VERSION=
   - RELEASE_PARENT=false
   - VERSION_PARENT=7.15.0
-  - PHASES=(1, 2, 3, 4, 5, 6)
+  - PHASES=1,2,3,4,5,6
 
 jobs:
   include:
@@ -33,7 +33,7 @@ jobs:
     - &common-steps
       stage: Build
       name: Build phase 1
-      if: 1 IN env(PHASES) AND type=api
+      if: env(PHASES)=1 AND type=api
       #if: should_skip != 'true' 
       python: 3.6
       jdk: openjdk11
@@ -59,19 +59,15 @@ jobs:
         # gcc-c++            x86_64  4.8.5-44.el7                base              7.2 M
         # nodejs             x86_64  2:10.23.0-1nodesource       nodesource         20 M
         # yarn               noarch  1.22.5-1          
-
       before_script:
       - |
         CHE_VERSION="${VERSION}"
         echo "CHE_VERSION=${CHE_VERSION}"
-
         DWO_VERSION="${DWO_VERSION}"
         # if user accidentally entered 0.y.z instead of v0.y.z, prefix with the required "v"
         if [[ ${DWO_VERSION} != "v"* ]]; then DWO_VERSION="v${DWO_VERSION}"; fi
         echo "DWO_VERSION=${DWO_VERSION}"
-
         #PHASES="${PHASES}"
-        echo $PHASES
         PARENT_VERSION="${VERSION_PARENT}"
         PARENT_RELEASE="${RELEASE_PARENT}"
         export CHE_GITHUB_SSH_KEY=${CHE_GITHUB_SSH_KEY}
@@ -88,36 +84,36 @@ jobs:
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 1 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 2
-      if: 2 IN env(PHASES) AND type=api
+      if: env(PHASES)=2 AND type=api
       script:
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 2 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 3
-      if: 3 IN env(PHASES) AND type=api
+      if: env(PHASES)=3 AND type=api
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 3 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 4
-      if: 4 IN env(PHASES) AND type=api
+      if: env(PHASES)=4 AND type=api
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 4 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 5
-      if: 5 IN env(PHASES) AND type=api
+      if: env(PHASES)=5 AND type=api
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 5 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 6
-      if: 6 IN env(PHASES) AND type=api
-      script:
+      if: env(PHASES)=6 AND type=api
+      script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 6 --parent-version ${PARENT_VERSION}

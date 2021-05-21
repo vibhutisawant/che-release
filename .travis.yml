@@ -19,7 +19,7 @@ env:
   - DWO_VERSION=
   - RELEASE_PARENT=false
   - VERSION_PARENT=7.15.0
-  - PHASES=('1' '2' '3' '4' '5' '6')
+  - PHASES=(1, 2, 3, 4, 5, 6)
 
 jobs:
   include:

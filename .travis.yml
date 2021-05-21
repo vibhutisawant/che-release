@@ -71,6 +71,7 @@ jobs:
         echo "DWO_VERSION=${DWO_VERSION}"
 
         #PHASES="${PHASES}"
+        echo $PHASES
         PARENT_VERSION="${VERSION_PARENT}"
         PARENT_RELEASE="${RELEASE_PARENT}"
         export CHE_GITHUB_SSH_KEY=${CHE_GITHUB_SSH_KEY}

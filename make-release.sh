@@ -187,19 +187,6 @@ invokeAction() {
     Org=${strarr[0]}
     Repo=${strarr[1]}
 
-    # body="{
-    #  "request": {
-    #  "branch":"$WORKFLOW_MAIN_BRANCH",
-    #  "merge_mode": "deep_merge_append",
-    #  "config": {
-    #    "env": {
-    #      "global": [
-    #        "TAG=$CHE_VERSION"
-    #      ]
-    #    }
-    # }
-    # }}"
-
     body="{
     \"request\":{
     \"branch\":\"$WORKFLOW_MAIN_BRANCH\",
@@ -236,35 +223,35 @@ releaseCheTheia() {
 }
 
 releaseDevfileRegistry() {
-    invokeAction eclipse-che/che-devfile-registry "Release Che Devfile Registry" "4191260" "version=${CHE_VERSION}"
+    invokeAction eclipse-che/che-devfile-registry "Release Che Devfile Registry" "version=${CHE_VERSION}"
 }
 releasePluginRegistry() {
-    invokeAction eclipse-che/che-plugin-registry "Release Che Plugin Registry" "4191251" "version=${CHE_VERSION}"
+    invokeAction eclipse-che/che-plugin-registry "Release Che Plugin Registry" "version=${CHE_VERSION}"
 }
 
 branchJWTProxyAndKIP() {
-    invokeAction eclipse/che-jwtproxy "Create branch" "5410230" "branch=${BRANCH}"
-    invokeAction che-incubator/kubernetes-image-puller "Create branch" "5409996" "branch=${BRANCH}"
+    invokeAction eclipse/che-jwtproxy "Create branch" "branch=${BRANCH}"
+    invokeAction che-incubator/kubernetes-image-puller "Create branch" "branch=${BRANCH}"
 }
 
 releaseDashboard() {
-    invokeAction eclipse-che/che-dashboard "Release Che Dashboard" "3152474" "version=${CHE_VERSION}"
+    invokeAction eclipse-che/che-dashboard "Release Che Dashboard" "version=${CHE_VERSION}"
 }
 
 releaseCheServer() {
-    invokeAction eclipse/che "Release Che Server" "5536792" "version=${CHE_VERSION},releaseParent=${RELEASE_CHE_PARENT},versionParent=${VERSION_CHE_PARENT}"
+    invokeAction eclipse/che "Release Che Server" "version=${CHE_VERSION},releaseParent=${RELEASE_CHE_PARENT},versionParent=${VERSION_CHE_PARENT}"
 }
 
 releaseCheOperator() {
-    invokeAction eclipse-che/che-operator "Release Che Operator" "3593082" "version=${CHE_VERSION},dwoVersion=${DWO_VERSION},dwoCheVersion=v${CHE_VERSION}"
+    invokeAction eclipse-che/che-operator "Release Che Operator" "version=${CHE_VERSION},dwoVersion=${DWO_VERSION},dwoCheVersion=v${CHE_VERSION}"
 }
 
 releaseDwoOperator() {
-    invokeAction devfile/devworkspace-operator "Release DevWorkspace Operator" "6380164" "version=${DWO_VERSION}"
+    invokeAction devfile/devworkspace-operator "Release DevWorkspace Operator" "version=${DWO_VERSION}"
 }
 
 releaseDwoCheOperator() {
-    invokeAction che-incubator/devworkspace-che-operator "Release DevWorkspace Che Operator" "6597719" "version=v${CHE_VERSION},dwoVersion=${DWO_VERSION}"
+    invokeAction che-incubator/devworkspace-che-operator "Release DevWorkspace Che Operator" "version=v${CHE_VERSION},dwoVersion=${DWO_VERSION}"
 }
 
 # TODO change it to someone else?
@@ -302,10 +289,10 @@ fi
 set +x
 #mkdir $HOME/.ssh/
 ls $HOME/.ssh/
-cat $HOME/.ssh/id_rsa
 #echo $CHE_GITHUB_SSH_KEY | base64 -d > $HOME/.ssh/id_rsa
 chmod 0400 $HOME/.ssh/id_rsa
 ssh-keyscan github.com >> ~/.ssh/known_hosts
+cat ~/.ssh/known_hosts
 set -x
 
 installDebDeps

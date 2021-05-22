@@ -19,7 +19,7 @@ env:
   - DWO_VERSION=
   - RELEASE_PARENT=false
   - VERSION_PARENT=7.15.0
-  - PHASES=(1, 2, 3, 4, 5, 6)
+  - PHASES=1,2,3,4,5,6
 
 jobs:
   include:
@@ -33,10 +33,14 @@ jobs:
     - &common-steps
       stage: Build
       name: Build phase 1
-      if: env(PHASES)=1 AND type=api
+      if: 1 IN env(phases_list) AND type=api
       #if: should_skip != 'true' 
       python: 3.6
       jdk: openjdk11
+      before_install:
+      - |
+        IFS=';' read -ra phases_list <<< "$PHASES"
+        echo $phases_list
       install: 
       - |
         sudo snap install --classic hub
@@ -84,35 +88,35 @@ jobs:
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 1 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 2
-      if: env(PHASES)=2 AND type=api
+      if: 2 IN env(phases_list) AND type=api
       script:
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 2 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 3
-      if: env(PHASES)=3 AND type=api
+      if: 3 IN env(phases_list) AND type=api
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 3 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 4
-      if: env(PHASES)=4 AND type=api
+      if: 4 IN env(phases_list) AND type=api
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 4 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 5
-      if: env(PHASES)=5 AND type=api
+      if: 5 IN env(phases_list) AND type=api
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 5 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 6
-      if: env(PHASES)=6 AND type=api
+      if: 6 IN env(phases_list) AND type=api
       script: 
       - |
         set -e

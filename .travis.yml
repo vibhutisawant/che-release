@@ -37,7 +37,8 @@ jobs:
     - &common-steps
       stage: Build
       name: Build phase 1
-      if: 1 IN env(phases_list) AND type=api
+      if: 1 IN env(PHASES) IN (1) AND type=api
+      #if: 1 IN env(phases_list) AND type=api
       #if: should_skip != 'true' 
       python: 3.6
       jdk: openjdk11
@@ -92,34 +93,39 @@ jobs:
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 1 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 2
-      if: 2 IN env(phases_list) AND type=api
+      if: 2 IN env(PHASES) IN (2) AND type=api
+      #if: 2 IN env(phases_list) AND type=api
       script:
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 2 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 3
-      if: 3 IN env(phases_list) AND type=api
+      if: env(PHASES) IN (3) AND type=api
+      #if: 3 IN env(phases_list) AND type=api
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 3 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 4
-      if: 4 IN env(phases_list) AND type=api
+      if: env(PHASES) IN (4) AND type=api
+      #if: 4 IN env(phases_list) AND type=api
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 4 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 5
-      if: 5 IN env(phases_list) AND type=api
+      if: env(PHASES) IN (5) AND type=api
+      #if: 5 IN env(phases_list) AND type=api
       script: 
       - |
         set -e
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 5 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 6
+      if: env(PHASES) IN (6) AND type=api
       if: 6 IN env(phases_list) AND type=api
       script: 
       - |

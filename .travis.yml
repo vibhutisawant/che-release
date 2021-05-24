@@ -15,11 +15,12 @@ env:
   - DWO_VERSION=
   - RELEASE_PARENT=false
   - VERSION_PARENT=7.15.0
-  - PHASES="1 2 3 4 5 6"
+  - PHASES="1, 2, 3, 4, 5, 6"
   
 # before_install:
-#   - IFS=',' read -ra phases_list <<< "$PHASES"
-#   - echo $phases_list
+#   - IFS=', ' read -r -a array <<< "$PHASES"
+#   - echo ${array[@]}
+#   - export PHASE_LIST=${array[@]}
 
 install:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
@@ -37,15 +38,17 @@ jobs:
     - &common-steps
       stage: Build
       name: Build phase 1
-      if: env(PHASES) IN (1) AND type=api
+      before_install:
+      - IFS=', ' read -r -a array <<< "$PHASES"
+      - echo ${array[0]}
+      - export PHASE_LIST=${array[0]}
+      if: env(PHASE_LIST) in (1,2,3,4,5,6) AND type=api
+      #if: (1) IN env(PHASE_LIST) AND type=api
       #if: 1 IN env(phases_list) AND type=api
       #if: should_skip != 'true' 
       python: 3.6
       jdk: openjdk11
-      before_install:
-      - |
-        IFS=',' read -ra phases_list <<< "$PHASES"
-        echo $phases_list
+      
       install: 
       - |
         sudo snap install --classic hub
@@ -93,7 +96,11 @@ jobs:
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 1 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 2
-      if: env(PHASES) IN (2) AND type=api
+      before_install:
+      - IFS=', ' read -r -a array <<< "$PHASES"
+      - echo ${array[1]}
+      - export PHASE_LIST=${array[0]}
+      #if: env(PHASES) IN (2) AND type=api
       #if: 2 IN env(phases_list) AND type=api
       script:
       - |
@@ -101,7 +108,11 @@ jobs:
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 2 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 3
-      if: env(PHASES) IN (3) AND type=api
+      before_install:
+      - IFS=', ' read -r -a array <<< "$PHASES"
+      - echo ${array[2]}
+      - export PHASE_LIST=${array[0]}
+      #if: env(PHASES) IN (3) AND type=api
       #if: 3 IN env(phases_list) AND type=api
       script: 
       - |
@@ -109,7 +120,11 @@ jobs:
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 3 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 4
-      if: env(PHASES) IN (4) AND type=api
+      before_install:
+      - IFS=', ' read -r -a array <<< "$PHASES"
+      - echo ${array[3]}
+      - export PHASE_LIST=${array[0]}
+      #if: env(PHASES) IN (4) AND type=api
       #if: 4 IN env(phases_list) AND type=api
       script: 
       - |
@@ -117,7 +132,11 @@ jobs:
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 4 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 5
-      if: env(PHASES) IN (5) AND type=api
+      before_install:
+      - IFS=', ' read -r -a array <<< "$PHASES"
+      - echo ${array[4]}
+      - export PHASE_LIST=${array[0]}
+      #if: env(PHASES) IN (5) AND type=api
       #if: 5 IN env(phases_list) AND type=api
       script: 
       - |
@@ -125,7 +144,11 @@ jobs:
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 5 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 6
-      if: env(PHASES) IN (6) AND type=api
+      before_install:
+      - IFS=', ' read -r -a array <<< "$PHASES"
+      - echo ${array[0]}
+      - export PHASE_LIST=${array[5]}
+      #if: env(PHASES) IN (6) AND type=api
       #if: 6 IN env(phases_list) AND type=api
       script: 
       - |

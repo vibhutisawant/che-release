@@ -18,14 +18,15 @@ env:
   - PHASES="1, 2, 3, 4, 5, 6"
   - PHASES_LIST=1
 
-# before_install:
-# - |
-#   IFS=', ' read -r -a array <<< "$PHASES"
-#   echo ${array[@]}
-#   for ${TRAVIS_JOB_NUMBER: -1} in "${array[@]}"
-#   do
-#     export PHASES_LIST=${TRAVIS_JOB_NUMBER: -1}
-#   done
+before_install:
+- |
+  echo "Hello"
+  # IFS=', ' read -r -a array <<< "$PHASES"
+  # echo ${array[@]}
+  # for ${TRAVIS_JOB_NUMBER: -1} in "${array[@]}"
+  # do
+  #   export PHASES_LIST=${TRAVIS_JOB_NUMBER: -1}
+  # done
   
 install:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin

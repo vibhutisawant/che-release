@@ -335,6 +335,7 @@ IMAGES_LIST=(
     quay.io/eclipse/che-e2e
 )
 if [[ ${PHASES} == *"2"* ]] || [[ ${PHASES} == *"3"* ]] || [[ ${PHASES} == *"6"* ]]; then
+    echo "bypass"
     # verify images all created from IMAGES_LIST
     # for image in "${IMAGES_LIST[@]}"; do
     #     verifyContainerExistsWithTimeout ${image}:${CHE_VERSION} 60

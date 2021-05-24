@@ -20,13 +20,16 @@ env:
 
 before_install:
 - |
-  echo "Hello"
-  # IFS=', ' read -r -a array <<< "$PHASES"
-  # echo ${array[@]}
-  # for ${TRAVIS_JOB_NUMBER: -1} in "${array[@]}"
-  # do
-  #   export PHASES_LIST=${TRAVIS_JOB_NUMBER: -1}
-  # done
+  IFS=', ' read -r -a array <<< "$PHASES"
+  echo ${array[@]}
+  for temp in "${array[@]}"
+  do
+     if [ "$temp" = "${TRAVIS_JOB_NUMBER: -1}" ]; then export PHASES_LIST="${TRAVIS_JOB_NUMBER: -1}"; fi
+
+  done
+
+  echo $PHASES_LIST
+
   
 install:
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin

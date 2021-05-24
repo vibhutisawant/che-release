@@ -47,7 +47,7 @@ jobs:
     - &common-steps
       stage: Build
       name: Build phase 1
-      if: env(PHASES_LIST) in (1,2,3,4,5,6) AND type=api
+      if: env(PHASES_LIST)  IS present AND env(PHASES_LIST) IN (1,2,3,4,5,6) AND type=api
       #if: (1) IN env(PHASE_LIST) AND type=api
       #if: 1 IN env(phases_list) AND type=api
       #if: should_skip != 'true' 

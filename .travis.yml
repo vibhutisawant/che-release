@@ -24,7 +24,7 @@ before_install:
   echo ${array[@]}
   for ${TRAVIS_JOB_NUMBER: -1} in "${array[@]}"
   do
-    export PHASE_LIST=${TRAVIS_JOB_NUMBER: -1}
+    export PHASES_LIST=${TRAVIS_JOB_NUMBER: -1}
   done
   
 install:
@@ -43,7 +43,7 @@ jobs:
     - &common-steps
       stage: Build
       name: Build phase 1
-      if: env(PHASE_LIST) in (1,2,3,4,5,6) AND type=api
+      if: env(PHASES_LIST) in (1,2,3,4,5,6) AND type=api
       #if: (1) IN env(PHASE_LIST) AND type=api
       #if: 1 IN env(phases_list) AND type=api
       #if: should_skip != 'true' 

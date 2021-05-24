@@ -93,7 +93,7 @@ jobs:
         ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 1 --parent-version ${PARENT_VERSION} 
     - <<: *common-steps
       name: Build Phase 2
-      if: 2 IN env(PHASES) IN (2) AND type=api
+      if: env(PHASES) IN (2) AND type=api
       #if: 2 IN env(phases_list) AND type=api
       script:
       - |
@@ -126,7 +126,7 @@ jobs:
     - <<: *common-steps
       name: Build Phase 6
       if: env(PHASES) IN (6) AND type=api
-      if: 6 IN env(phases_list) AND type=api
+      #if: 6 IN env(phases_list) AND type=api
       script: 
       - |
         set -e

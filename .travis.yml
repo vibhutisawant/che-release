@@ -7,7 +7,7 @@ git:
 
 language: python
 python: 3.6
-# jdk: openjdk11
+jdk: openjdk11
 
 env: 
   global:
@@ -17,9 +17,52 @@ env:
   - VERSION_PARENT=7.15.0
   - PHASES="1,2,3,4,5,6"
 
-install:
-  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-  - docker login quay.io -u="$QUAY_USERNAME " -p="$QUAY_PASSWORD"
+install: 
+    - |
+      sudo snap install --classic hub
+      python -m pip install --upgrade pip
+      pip install yq
+      python --version
+      pip --version
+      yq --version
+      # install more repos
+      sudo apt-get update -y || true
+      # install more dependencies
+      sudo apt-get -y -q install wget curl bash git 
+      java -version
+      # want git >=2.24, hub >=2
+      hub --version # hub reports git version too
+      # want >=5
+      bash --version
+
+      echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+      docker login quay.io -u="$QUAY_USERNAME " -p="$QUAY_PASSWORD"
+
+      # do we need any of these?
+      # docker-ce          x86_64  3:19.03.14-3.el7            docker-ce-stable   24 M
+      # gcc-c++            x86_64  4.8.5-44.el7                base              7.2 M
+      # nodejs             x86_64  2:10.23.0-1nodesource       nodesource         20 M
+      # yarn               noarch  1.22.5-1          
+
+before_script:
+    - |
+      CHE_VERSION="${VERSION}"
+      echo "CHE_VERSION=${CHE_VERSION}"
+      DWO_VERSION="${DWO_VERSION}"
+      # if user accidentally entered 0.y.z instead of v0.y.z, prefix with the required "v"
+      if [[ ${DWO_VERSION} != "v"* ]]; then DWO_VERSION="v${DWO_VERSION}"; fi
+      echo "DWO_VERSION=${DWO_VERSION}"
+      #PHASES="${PHASES}"
+      PARENT_VERSION="${VERSION_PARENT}"
+      PARENT_RELEASE="${RELEASE_PARENT}"
+      export CHE_GITHUB_SSH_KEY=${CHE_GITHUB_SSH_KEY}
+      export QUAY_ECLIPSE_CHE_USERNAME=${QUAY_USERNAME}
+      export QUAY_ECLIPSE_CHE_PASSWORD=${QUAY_PASSWORD}
+      git config --global user.name "Mykhailo Kuznietsov"
+      git config --global user.email "mkuznets@redhat.com"
+      export GITHUB_TOKEN=${CHE_BOT_GITHUB_TOKEN}
+      export CHE_BOT_GITHUB_TOKEN=${CHE_BOT_GITHUB_TOKEN}
+      export CHE_INCUBATOR_BOT_GITHUB_TOKEN=${CHE_INCUBATOR_BOT_GITHUB_TOKEN}
   
 jobs:
   include:
@@ -30,88 +73,42 @@ jobs:
     #   install: skip
     #   os: linux
 
-    - &common-steps
-      stage: Build
-      name: Build phase 1
+    - stage: Build phase 1
       if: env(PHASES) =~ /[1]/ AND type=api
-      python: 3.6
-      jdk: openjdk11
-      
-      install: 
-      - |
-        sudo snap install --classic hub
-        python -m pip install --upgrade pip
-        pip install yq
-        python --version
-        pip --version
-        yq --version
-        # install more repos
-        sudo apt-get update -y || true
-        # install more dependencies
-        sudo apt-get -y -q install wget curl bash git 
-        java -version
-        # want git >=2.24, hub >=2
-        hub --version # hub reports git version too
-        # want >=5
-        bash --version
-        # do we need any of these?
-        # docker-ce          x86_64  3:19.03.14-3.el7            docker-ce-stable   24 M
-        # gcc-c++            x86_64  4.8.5-44.el7                base              7.2 M
-        # nodejs             x86_64  2:10.23.0-1nodesource       nodesource         20 M
-        # yarn               noarch  1.22.5-1          
-      before_script:
-      - |
-        CHE_VERSION="${VERSION}"
-        echo "CHE_VERSION=${CHE_VERSION}"
-        DWO_VERSION="${DWO_VERSION}"
-        # if user accidentally entered 0.y.z instead of v0.y.z, prefix with the required "v"
-        if [[ ${DWO_VERSION} != "v"* ]]; then DWO_VERSION="v${DWO_VERSION}"; fi
-        echo "DWO_VERSION=${DWO_VERSION}"
-        #PHASES="${PHASES}"
-        PARENT_VERSION="${VERSION_PARENT}"
-        PARENT_RELEASE="${RELEASE_PARENT}"
-        export CHE_GITHUB_SSH_KEY=${CHE_GITHUB_SSH_KEY}
-        export QUAY_ECLIPSE_CHE_USERNAME=${QUAY_USERNAME}
-        export QUAY_ECLIPSE_CHE_PASSWORD=${QUAY_PASSWORD}
-        git config --global user.name "Mykhailo Kuznietsov"
-        git config --global user.email "mkuznets@redhat.com"
-        export GITHUB_TOKEN=${CHE_BOT_GITHUB_TOKEN}
-        export CHE_BOT_GITHUB_TOKEN=${CHE_BOT_GITHUB_TOKEN}
-        export CHE_INCUBATOR_BOT_GITHUB_TOKEN=${CHE_INCUBATOR_BOT_GITHUB_TOKEN}
       script: 
       - |
         set -e
-        ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 1 --parent-version ${PARENT_VERSION} 
-    - <<: *common-steps
-      name: Build Phase 2
+        ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 1 --parent-version ${PARENT_VERSION}
+
+    - stage: Build Phase 2
       if: env(PHASES) =~ /[2]/ AND type=api
       script:
       - |
         set -e
-        ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 2 --parent-version ${PARENT_VERSION} 
-    - <<: *common-steps
-      name: Build Phase 3
+        ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 2 --parent-version ${PARENT_VERSION}
+
+    - stage: Build Phase 3
       if: env(PHASES) =~ /[3]/ AND type=api
       script: 
       - |
         set -e
-        ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 3 --parent-version ${PARENT_VERSION} 
-    - <<: *common-steps
-      name: Build Phase 4
+        ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 3 --parent-version ${PARENT_VERSION}
+
+    - stage: Build Phase 4
       if: env(PHASES) =~ /[4]/ AND type=api
       script: 
       - |
         set -e
-        ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 4 --parent-version ${PARENT_VERSION} 
-    - <<: *common-steps
-      name: Build Phase 5
+        ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 4 --parent-version ${PARENT_VERSION}
+
+    - stage: Build Phase 5
       if: env(PHASES) =~ /[5]/ AND type=api
       script: 
       - |
         set -e
-        ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 5 --parent-version ${PARENT_VERSION} 
-    - <<: *common-steps
-      name: Build Phase 6
+        ./make-release.sh -v ${CHE_VERSION} -dv ${DWO_VERSION} -p 5 --parent-version ${PARENT_VERSION}
+
+    - stage: Build Phase 6
       if: env(PHASES) =~ /[6]/ AND type=api
       script: 
       - |

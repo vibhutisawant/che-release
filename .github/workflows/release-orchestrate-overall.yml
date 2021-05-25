@@ -40,7 +40,7 @@ jobs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
     steps:
       - id: skip_check
-        uses: vibhutisawant/skip-duplicate-actions@6b13a16d5b9e191689d9332c1ab767fef9acc1a2
+        uses: vibhutisawant/skip-duplicate-actions@2faab8324c67027e7e9adcfe0bf280a76991439b
         with:
           # always skip concurrent runs
           concurrent_skipping: 'always'

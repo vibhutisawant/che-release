@@ -215,7 +215,7 @@ invokeAction() {
 }
 
 releaseMachineExec() {
-    invokeAction Prabhav-Thali/che-machine-exec "Release Che Machine Exec" "version=${CHE_VERSION}"
+    invokeAction vibhutisawant/che-machine-exec "Release Che Machine Exec" "version=${CHE_VERSION}"
 }
 
 releaseCheTheia() {

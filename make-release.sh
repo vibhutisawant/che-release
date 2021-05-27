@@ -40,6 +40,7 @@ verifyContainerExistsWithTimeout()
         echo "       [$count/$timeout_intervals] Verify ${1} exists..." 
         # check if the container exists
         verifyContainerExists "$1"
+	date
         if [[ ${containerExists} -eq 1 ]]; then break; fi
         (( count=count+1 ))
         sleep 20s
@@ -212,6 +213,7 @@ invokeAction() {
     
     #curl -sSL https://api.github.com/repos/${this_repo}/actions/workflows/${workflow_id}/dispatches -X POST -H "Authorization: token ${this_github_token}" -H "Accept: application/vnd.github.v3+json" -d "{\"ref\":\"${workflow_ref}\",\"inputs\": ${inputsJson} }" || die_with "[ERROR] Problem invoking action https://github.com/${this_repo}/actions?query=workflow%3A%22${this_action_name// /+}%22"
     echo "[INFO] Invoked '${this_action_name}' Travis job - see https://travis-ci.com/github/${Org}/${Repo}/builds"
+    date
 }
 
 releaseMachineExec() {
